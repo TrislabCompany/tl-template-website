@@ -1,0 +1,17 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  article: CollectionEntry<"articles">;
+}
+
+const { article } = Astro.props;
+---
+
+<article class="card">
+  <h3><a href={`/articles/${article.id}`}>{article.data.title}</a></h3>
+  <p>{article.data.description}</p>
+  <time datetime={article.data.published.toISOString()}>
+    {article.data.published.toLocaleDateString("en-GB", { dateStyle: "long" })}
+  </time>
+</article>
