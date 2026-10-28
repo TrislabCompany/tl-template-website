@@ -1,0 +1,16 @@
+---
+// Shows the Environment the container runs in, read from /config.json in the
+// browser. The same image runs in every Environment.
+---
+
+<span class="environment" data-environment>Environment: local</span>
+
+<script>
+  import { loadConfig } from "../lib/config";
+
+  const config = await loadConfig();
+  const environment = config.PLATFORM_ENVIRONMENT ?? "local";
+  document.querySelectorAll("[data-environment]").forEach((element) => {
+    element.textContent = `Environment: ${environment}`;
+  });
+</script>
