@@ -1,0 +1,140 @@
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "A sample site built from tl-template-website." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --text: #1d2330;
+    --muted: #5b6475;
+    --accent: #2457c5;
+    --surface: #ffffff;
+    --background: #f5f6f8;
+    --border: #dde1e8;
+    color-scheme: light dark;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.6;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --text: #e6e9ef;
+      --muted: #a3abba;
+      --accent: #7ea4ff;
+      --surface: #1b1f27;
+      --background: #12151b;
+      --border: #2c323d;
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+    background: var(--background);
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .site-header,
+  .site-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--surface);
+  }
+
+  .site-header {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .site-header nav {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .site-header a {
+    text-decoration: none;
+  }
+
+  .site-header a[aria-current="page"] {
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  .site-header .brand {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .card {
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+  }
+
+  .card h3 {
+    margin: 0 0 0.25rem;
+  }
+
+  .card p {
+    margin: 0 0 0.5rem;
+  }
+
+  time {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+</style>

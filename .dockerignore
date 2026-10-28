@@ -1,0 +1,16 @@
+# Keeps the build context small and free of secrets: only what the build needs.
+.git
+.github
+.astro
+.vscode
+.idea
+node_modules
+dist
+docs
+*.log
+.env
+.env.*
+.DS_Store
+Dockerfile
+.dockerignore
+README.md
