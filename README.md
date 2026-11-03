@@ -62,7 +62,7 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 
 1. **Run it locally:** `pnpm install`, then `pnpm dev`, and open <http://localhost:4321>. Run `pnpm test` before you push. [getting-started.md](docs/getting-started.md) also runs it as the image.
 2. **Open your first PR:** change a page in `src/pages/`, push a branch and open a PR. `ci / ci` must pass and a code owner must approve.
-3. **Deploy, release and promote:** a merge to `main` deploys to `dev`, a tag `vX.Y.Z` releases to the `release` tier, and a promotion moves a release to production. The platform adds these workflows to the template; [deployment.md](docs/deployment.md) explains how they work.
+3. **Deploy, release and promote:** a merge to `main` deploys to `dev`, a tag `vX.Y.Z` releases to the `release` tier, and a promotion moves a release to production. `deploy.yml` and `release.yml` do the first two, and the platform adds `promote.yml` before the first production Environment; [deployment.md](docs/deployment.md) explains how they work.
 
 ## More
 
