@@ -4,7 +4,7 @@ The template for content sites on the Trislab platform. Read this first; the det
 
 ## What it is
 
-An [Astro](https://astro.build) site built into static files, served by an unprivileged nginx image on port 8080. The sample site has a home page that lists Markdown articles, one article, an about page, a 404 page, and a footer that shows the Environment it runs in, read from `/config.json`.
+An [Astro](https://astro.build) site built into static files, served by an unprivileged nginx image on port 8080. The sample site is in English and Slovenian. It has a home page that lists Markdown articles, one article, an about page, a contact page, an imprint, a privacy policy, an accessibility statement, a 404 page, and a footer that shows the Environment it runs in, read from `/config.json`.
 
 ## When to use it
 
@@ -27,10 +27,16 @@ The new repository gets a copy of these files and never syncs with the template 
 What works on the first deploy, with no change:
 
 - The sample site, ready to replace with your own pages and content.
+- Several languages, each under its own URL (`/en/`, `/sl/`), with `hreflang`, `x-default`, a canonical link and a language switch on every page. A one-language site has no prefix.
+- A contact page, an imprint, a privacy policy and an accessibility statement, filled from `src/site.config.ts` and Markdown, and linked from the footer.
+- A sitemap of every page in every language, and a `robots.txt` that names it.
+- The company as structured data (JSON-LD, `Organization` or `LocalBusiness`) on every page.
+- `/.well-known/security.txt`, with its expiry date checked in `ci`.
+- A page-weight budget: `ci` fails when a page or its JavaScript is over the limit.
 - `/healthz` and `/readyz`, which the platform uses to know the app is alive and ready.
 - `/config.json`, written at container start from the `PLATFORM_*` and `PUBLIC_*` settings, so one image runs in every Environment.
 - Security headers on every answer, including a strict Content-Security-Policy, and long caching of hashed assets.
-- The check `ci / ci` on every PR and every push to `main`: it builds the image, runs `astro check` and the linter, scans the image with Trivy, and checks `platform.yaml`.
+- The check `ci / ci` on every PR and every push to `main`: it builds the image, runs `astro check`, the linter, the page-weight and `security.txt` checks, scans the image with Trivy, and checks `platform.yaml`.
 - An image that runs as a non-root user and listens only on port 8080, with every base image pinned by digest.
 
 ## Technologies
@@ -51,8 +57,10 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 
 | Path | Holds |
 | --- | --- |
-| `src/` | The site: `pages/`, `layouts/`, `components/`, `content/` and `lib/config.ts` |
-| `public/` | Files copied as they are: favicon, `robots.txt` |
+| `src/site.config.ts` | The site's facts: languages, company, contact, legal pages, structured data, `security.txt` |
+| `src/` | The site: `pages/[...lang]/`, `layouts/`, `components/`, `content/<collection>/<language>/`, `i18n/` and `lib/` |
+| `public/` | Files copied as they are: the favicon |
+| `scripts/`, `page-weight.config.json` | The checks `pnpm test` runs on the built site, and the page-weight limits |
 | `Dockerfile`, `nginx/`, `docker-entrypoint.d/` | The image: the build, nginx's configuration, and the script that writes `/config.json` |
 | `platform.yaml` | The image and the sizing of the app, within the stamp's caps |
 | `.github/` | The `ci` workflow, the PR template and the code owners |
@@ -60,13 +68,15 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 
 ## First steps
 
-1. **Run it locally:** `pnpm install`, then `pnpm dev`, and open <http://localhost:4321>. Run `pnpm test` before you push. [getting-started.md](docs/getting-started.md) also runs it as the image.
-2. **Open your first PR:** change a page in `src/pages/`, push a branch and open a PR. `ci / ci` must pass and a code owner must approve.
-3. **Deploy, release and promote:** a merge to `main` deploys to `dev`, a tag `vX.Y.Z` releases to the `release` tier, and a promotion moves a release to production. `deploy.yml` and `release.yml` do the first two, and the platform adds `promote.yml` before the first production Environment; [deployment.md](docs/deployment.md) explains how they work.
+1. **Set the site's facts:** languages, company, contact and legal pages in `src/site.config.ts` ([site-settings.md](docs/site-settings.md)).
+2. **Run it locally:** `pnpm install`, then `pnpm dev`, and open <http://localhost:4321>. Run `pnpm test` before you push. [getting-started.md](docs/getting-started.md) also runs it as the image.
+3. **Open your first PR:** change a page in `src/pages/[...lang]/`, push a branch and open a PR. `ci / ci` must pass and a code owner must approve.
+4. **Deploy, release and promote:** a merge to `main` deploys to `dev`, a tag `vX.Y.Z` releases to the `release` tier, and a promotion moves a release to production. `deploy.yml` and `release.yml` do the first two, and the platform adds `promote.yml` before the first production Environment; [deployment.md](docs/deployment.md) explains how they work.
 
 ## More
 
 - [Getting started](docs/getting-started.md): run the site with the dev server and as the image, and run the tests.
 - [Architecture](docs/architecture.md): the image, the app, nginx and the request path.
+- [Site settings](docs/site-settings.md): languages, contact and legal pages, structured data, `security.txt` and the page-weight budget.
 - [Configuration](docs/configuration.md): the settings, `/config.json`, and how to add a `PUBLIC_` setting.
 - [Deployment](docs/deployment.md): Environments, deploy, release and promote, `platform.yaml` and the caps, and how to ask for more.

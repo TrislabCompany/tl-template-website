@@ -1,0 +1,37 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import { locale, prefixed, type Lang } from "../../../i18n";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { entryLang, entryLanguages, entrySlug } from "../../../lib/content";
+
+export async function getStaticPaths() {
+  const articles = await getCollection("articles");
+  return Promise.all(
+    articles.map(async (article) => {
+      const lang = entryLang(article);
+      const id = entrySlug(article);
+      return {
+        params: { lang: prefixed ? lang : undefined, id },
+        props: { article, lang, available: await entryLanguages("articles", id) },
+      };
+    }),
+  );
+}
+
+const { article, lang, available } = Astro.props as {
+  article: CollectionEntry<"articles">;
+  lang: Lang;
+  available: Lang[];
+};
+const { Content } = await render(article);
+---
+
+<BaseLayout title={article.data.title} description={article.data.description} lang={lang} available={available}>
+  <article>
+    <h1>{article.data.title}</h1>
+    <time datetime={article.data.published.toISOString()}>
+      {article.data.published.toLocaleDateString(locale(lang), { dateStyle: "long" })}
+    </time>
+    <Content />
+  </article>
+</BaseLayout>

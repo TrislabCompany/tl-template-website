@@ -14,3 +14,4 @@ docs
 Dockerfile
 .dockerignore
 README.md
+page-weight-report.json

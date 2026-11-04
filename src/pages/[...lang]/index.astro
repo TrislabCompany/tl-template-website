@@ -1,0 +1,21 @@
+---
+import ArticleCard from "../../components/ArticleCard.astro";
+import { languagePaths, t, type Lang } from "../../i18n";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getEntries } from "../../lib/content";
+import site from "../../site.config";
+
+export const getStaticPaths = languagePaths;
+
+const { lang } = Astro.props as { lang: Lang };
+const articles = (await getEntries("articles", lang)).sort(
+  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
+);
+---
+
+<BaseLayout title={site.name} lang={lang}>
+  <h1>{site.name}</h1>
+  <p>{site.description[lang]}</p>
+  <h2>{t(lang, "articles.heading")}</h2>
+  {articles.map((article) => <ArticleCard article={article} lang={lang} />)}
+</BaseLayout>

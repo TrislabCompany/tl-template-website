@@ -1,0 +1,5 @@
+{
+  "$comment": "Page-weight budget per page, in kilobytes (1 KB = 1024 bytes), checked by scripts/check-page-weight.mjs on the built site. A site may lower the limits; a higher limit needs a reason in the site's README.",
+  "totalKb": 500,
+  "javascriptKb": 50
+}

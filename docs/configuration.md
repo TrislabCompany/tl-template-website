@@ -2,6 +2,8 @@
 
 A static site can't read environment variables in the browser. So the container writes them into `/config.json` when it starts, and the site fetches that file. One image runs in every Environment, and nothing environment-specific is built into it.
 
+The site's own facts, which are the same in every Environment (languages, company, contact, legal pages), are built into the pages from `src/site.config.ts` instead: see [site-settings.md](site-settings.md).
+
 ## 1. The settings
 
 | Kind | Examples | Set by |

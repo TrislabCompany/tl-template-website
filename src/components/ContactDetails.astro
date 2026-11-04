@@ -1,0 +1,69 @@
+---
+// The contact details from src/site.config.ts: address with a map link,
+// e-mail by topic, phone and Google Business profile. No form and no embedded
+// map: the site has no backend and loads no outside service.
+import { t, type Lang } from "../i18n";
+import site from "../site.config";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { company, contact } = site;
+---
+
+<section class="contact-details">
+  <h2>{t(lang, "contact.address")}</h2>
+  <address>
+    {company.legalName}<br />
+    {company.address.street}<br />
+    {company.address.postalCode}
+    {company.address.city}
+  </address>
+  {
+    contact.mapUrl && (
+      <p>
+        <a href={contact.mapUrl} rel="noopener noreferrer">
+          {t(lang, "contact.map")}
+        </a>
+      </p>
+    )
+  }
+
+  {
+    contact.topics.length > 0 && (
+      <>
+        <h2>{t(lang, "contact.email")}</h2>
+        <ul>
+          {contact.topics.map(({ email, label }) => (
+            <li>
+              {label[lang]}: <a href={`mailto:${email}`}>{email}</a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+
+  {
+    contact.phone && (
+      <>
+        <h2>{t(lang, "contact.phone")}</h2>
+        <p>
+          <a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a>
+        </p>
+      </>
+    )
+  }
+
+  {
+    contact.googleBusinessUrl && (
+      <p>
+        <a href={contact.googleBusinessUrl} rel="noopener noreferrer">
+          {t(lang, "contact.googleBusiness")}
+        </a>
+      </p>
+    )
+  }
+</section>

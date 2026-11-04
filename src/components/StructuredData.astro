@@ -1,0 +1,41 @@
+---
+// The company as JSON-LD (schema.org Organization or LocalBusiness), from
+// src/site.config.ts. A script of type application/ld+json is data, not code:
+// browsers never run it, so the Content-Security-Policy (script-src 'self')
+// doesn't block it.
+import site from "../site.config";
+
+const { company, contact, structuredData } = site;
+const absolute = (url: string) => new URL(url, site.url).toString();
+
+const data =
+  structuredData === "none"
+    ? undefined
+    : {
+        "@context": "https://schema.org",
+        "@type": structuredData,
+        name: company.name,
+        legalName: company.legalName,
+        url: site.url,
+        logo: absolute(company.logo),
+        ...(structuredData === "LocalBusiness" ? { image: absolute(company.logo) } : {}),
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: company.address.street,
+          postalCode: company.address.postalCode,
+          addressLocality: company.address.city,
+          addressCountry: company.address.country,
+        },
+        ...(company.vatId ? { vatID: company.vatId } : {}),
+        ...(contact.topics[0] ? { email: contact.topics[0].email } : {}),
+        ...(contact.phone ? { telephone: contact.phone } : {}),
+        ...(company.profiles.length > 0 || contact.googleBusinessUrl
+          ? { sameAs: [...company.profiles, ...(contact.googleBusinessUrl ? [contact.googleBusinessUrl] : [])] }
+          : {}),
+      };
+
+// "<" is escaped so the text can never close the script element.
+const json = data && JSON.stringify(data).replace(/</g, "\u003c");
+---
+
+{json && <script type="application/ld+json" is:inline set:html={json} />}

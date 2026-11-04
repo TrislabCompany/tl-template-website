@@ -32,7 +32,7 @@ flowchart LR
 
 | Concern | Rule |
 | --- | --- |
-| Routing | `/about` serves `about/index.html`. A path with no file serves `404.html` with status 404 |
+| Routing | `/en/about` serves `en/about/index.html`. `/` is a small page that leads to the default language. A path with no file serves `404.html` with status 404 |
 | Caching | Files under `/_astro/` have a hash in their name and are cached for a year. Every other file is checked again on each visit. `/config.json` is never cached |
 | Security headers | `Content-Security-Policy` (scripts, styles and images only from the site itself), `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy` on every answer |
 | Health | `/healthz` (liveness) and `/readyz` (readiness) both answer `ok`: nginx serves the files itself, so it is ready as soon as it runs |
@@ -47,9 +47,14 @@ The image holds nothing that differs between Environments. When the container st
 
 | Folder or file | Holds |
 | --- | --- |
-| `src/pages/` | One file per page. The file's path is the URL |
+| `src/site.config.ts` | The site's facts, built into the pages: languages, company, contact, legal pages, structured data, `security.txt` ([site-settings.md](site-settings.md)) |
+| `src/pages/[...lang]/` | One file per page, built once per language. The file's path is the URL after the language |
+| `src/pages/` | The 404 page, `robots.txt` and `.well-known/security.txt` |
 | `src/layouts/BaseLayout.astro` | The head, header and footer every page shares, and the global styles |
 | `src/components/` | Reusable parts of pages |
-| `src/content/articles/` | Markdown articles, described in `src/content.config.ts` |
+| `src/content/articles/<language>/` | Markdown articles, described in `src/content.config.ts` |
+| `src/content/legal/<language>/` | The privacy policy and the accessibility statement |
+| `src/i18n/` | The interface strings per language, and the helpers for language URLs |
 | `src/lib/config.ts` | The one place that reads `/config.json` |
-| `public/` | Files copied as they are: the favicon and `robots.txt` |
+| `public/` | Files copied as they are: the favicon |
+| `scripts/` | The page-weight and `security.txt` checks that `pnpm test` runs on `dist/` |
