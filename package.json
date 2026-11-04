@@ -11,9 +11,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "astro check && pnpm run lint && astro build && pnpm run check:built",
+    "test": "astro check && pnpm run lint && pnpm run test:unit && astro build && pnpm run check:built",
     "check:built": "node scripts/check-page-weight.mjs && node scripts/check-security-txt.mjs",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:unit": "node --test \"scripts/*.test.mjs\"",
+    "co2": "node scripts/co2-estimate.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@astrojs/check": "0.9.12",
     "@eslint/js": "10.0.1",
+    "@tgwf/co2": "0.19.0",
     "eslint": "10.13.0",
     "eslint-plugin-astro": "3.2.1",
     "globals": "17.13.0",

@@ -33,10 +33,11 @@ What works on the first deploy, with no change:
 - The company as structured data (JSON-LD, `Organization` or `LocalBusiness`) on every page.
 - `/.well-known/security.txt`, with its expiry date checked in `ci`.
 - A page-weight budget: `ci` fails when a page or its JavaScript is over the limit.
+- A yearly CO₂ estimate for internal ESG figures: `pnpm co2` turns the average page weight and the yearly visits into kg CO₂e. It is never shown on the site.
 - `/healthz` and `/readyz`, which the platform uses to know the app is alive and ready.
 - `/config.json`, written at container start from the `PLATFORM_*` and `PUBLIC_*` settings, so one image runs in every Environment.
 - Security headers on every answer, including a strict Content-Security-Policy, and long caching of hashed assets.
-- The check `ci / ci` on every PR and every push to `main`: it builds the image, runs `astro check`, the linter, the page-weight and `security.txt` checks, scans the image with Trivy, and checks `platform.yaml`.
+- The check `ci / ci` on every PR and every push to `main`: it builds the image, runs `astro check`, the linter, the unit tests, the page-weight and `security.txt` checks, scans the image with Trivy, and checks `platform.yaml`.
 - An image that runs as a non-root user and listens only on port 8080, with every base image pinned by digest.
 
 ## Technologies
@@ -48,6 +49,7 @@ What works on the first deploy, with no change:
 | pnpm | 10.34.9 |
 | TypeScript | 5.9.3 |
 | ESLint | 10.13.0, with `typescript-eslint` 8.72.1 and `eslint-plugin-astro` 3.2.1 |
+| CO2.js (`@tgwf/co2`) | 0.19.0, dev only, for `pnpm co2` |
 | nginx | 1.30.6 (`nginxinc/nginx-unprivileged:1.30.6-alpine`) |
 | Trivy | 0.74.0, in `ci / ci` |
 
@@ -60,7 +62,8 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 | `src/site.config.ts` | The site's facts: languages, company, contact, legal pages, structured data, `security.txt` |
 | `src/` | The site: `pages/[...lang]/`, `layouts/`, `components/`, `content/<collection>/<language>/`, `i18n/` and `lib/` |
 | `public/` | Files copied as they are: the favicon |
-| `scripts/`, `page-weight.config.json` | The checks `pnpm test` runs on the built site, and the page-weight limits |
+| `scripts/`, `page-weight.config.json` | The checks `pnpm test` runs on the built site, the page-weight limits, and the yearly CO₂ estimate (`pnpm co2`) |
+| `docs/co2/` | The yearly CO₂ notes, one file per year |
 | `Dockerfile`, `nginx/`, `docker-entrypoint.d/` | The image: the build, nginx's configuration, and the script that writes `/config.json` |
 | `platform.yaml` | The image and the sizing of the app, within the stamp's caps |
 | `.github/` | The `ci` workflow, the PR template and the code owners |
@@ -77,6 +80,6 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 
 - [Getting started](docs/getting-started.md): run the site with the dev server and as the image, and run the tests.
 - [Architecture](docs/architecture.md): the image, the app, nginx and the request path.
-- [Site settings](docs/site-settings.md): languages, contact and legal pages, structured data, `security.txt` and the page-weight budget.
+- [Site settings](docs/site-settings.md): languages, contact and legal pages, structured data, `security.txt`, the page-weight budget and the yearly CO₂ estimate.
 - [Configuration](docs/configuration.md): the settings, `/config.json`, and how to add a `PUBLIC_` setting.
 - [Deployment](docs/deployment.md): Environments, deploy, release and promote, `platform.yaml` and the caps, and how to ask for more.
