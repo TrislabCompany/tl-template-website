@@ -57,4 +57,4 @@ The image holds nothing that differs between Environments. When the container st
 | `src/i18n/` | The interface strings per language, and the helpers for language URLs |
 | `src/lib/config.ts` | The one place that reads `/config.json` |
 | `public/` | Files copied as they are: the favicon |
-| `scripts/` | The page-weight and `security.txt` checks that `pnpm test` runs on `dist/` |
+| `scripts/` | The page-weight and `security.txt` checks that `pnpm test` runs on `dist/`, their unit tests, and the yearly CO₂ estimate (`pnpm co2`) |

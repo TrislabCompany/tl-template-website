@@ -27,7 +27,7 @@ Open <http://localhost:4321>. The page reloads when you save a file. The dev ser
 pnpm test
 ```
 
-`pnpm test` runs `astro check`, which type-checks the pages and the content, the linter (`pnpm lint`), then `astro build` and the checks on the built site: the page-weight budget and `security.txt` ([site-settings.md](site-settings.md)). `ci / ci` runs the same command: `pnpm install --frozen-lockfile && pnpm test`.
+`pnpm test` runs `astro check`, which type-checks the pages and the content, the linter (`pnpm lint`), then the unit tests of the scripts (`pnpm test:unit`), `astro build` and the checks on the built site: the page-weight budget and `security.txt` ([site-settings.md](site-settings.md)). `ci / ci` runs the same command: `pnpm install --frozen-lockfile && pnpm test`.
 
 ## 4. Build the static files
 
