@@ -1,17 +1,20 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { locale, localizedPath, type Lang } from "../i18n";
+import { articleSlug } from "../lib/content";
 
 interface Props {
   article: CollectionEntry<"articles">;
+  lang: Lang;
 }
 
-const { article } = Astro.props;
+const { article, lang } = Astro.props;
 ---
 
 <article class="card">
-  <h3><a href={`/articles/${article.id}`}>{article.data.title}</a></h3>
+  <h3><a href={localizedPath(lang, `/articles/${articleSlug(article)}`)}>{article.data.title}</a></h3>
   <p>{article.data.description}</p>
   <time datetime={article.data.published.toISOString()}>
-    {article.data.published.toLocaleDateString("en-GB", { dateStyle: "long" })}
+    {article.data.published.toLocaleDateString(locale(lang), { dateStyle: "long" })}
   </time>
 </article>

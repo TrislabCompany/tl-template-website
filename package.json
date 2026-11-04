@@ -11,10 +11,12 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "astro check && pnpm run lint",
+    "test": "astro check && pnpm run lint && astro build && pnpm run check:built",
+    "check:built": "node scripts/check-page-weight.mjs && node scripts/check-security-txt.mjs",
     "lint": "eslint ."
   },
   "dependencies": {
+    "@astrojs/sitemap": "3.7.4",
     "astro": "5.18.2"
   },
   "devDependencies": {

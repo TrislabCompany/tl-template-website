@@ -1,0 +1,16 @@
+---
+import { languagePaths, t, type Lang } from "../../i18n";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export const getStaticPaths = languagePaths;
+
+const { lang } = Astro.props as { lang: Lang };
+---
+
+<BaseLayout title={t(lang, "nav.about")} lang={lang}>
+  <h1>{t(lang, "nav.about")}</h1>
+  <p>
+    This page is <code>src/pages/[...lang]/about.astro</code>. The build writes one copy per language, such as
+    <code>en/about/index.html</code>, and nginx serves it at <code>/en/about</code>.
+  </p>
+</BaseLayout>

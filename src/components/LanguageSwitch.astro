@@ -1,0 +1,33 @@
+---
+// Links to the same page in every other language. Plain links, no JavaScript.
+// Hidden on a one-language site.
+import { languages, localizedPath, prefixed, t, type Lang } from "../i18n";
+
+interface Props {
+  lang: Lang;
+  /** The current page without its language prefix, for example "/about". */
+  path: string;
+  /** The languages this page exists in; by default all of them. */
+  available?: readonly Lang[];
+}
+
+const { lang, path, available = languages } = Astro.props;
+---
+
+{
+  prefixed && (
+    <nav class="language-switch" aria-label={t(lang, "language.switch")}>
+      {available.map((other) =>
+        other === lang ? (
+          <span aria-current="true" lang={other}>
+            {other.toUpperCase()}
+          </span>
+        ) : (
+          <a href={localizedPath(other, path)} hreflang={other} lang={other}>
+            {other.toUpperCase()}
+          </a>
+        ),
+      )}
+    </nav>
+  )
+}

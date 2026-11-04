@@ -27,7 +27,7 @@ Open <http://localhost:4321>. The page reloads when you save a file. The dev ser
 pnpm test
 ```
 
-`pnpm test` runs `astro check`, which type-checks the pages and the content, and then the linter (`pnpm lint`). `ci / ci` runs the same command: `pnpm install --frozen-lockfile && pnpm test`.
+`pnpm test` runs `astro check`, which type-checks the pages and the content, the linter (`pnpm lint`), then `astro build` and the checks on the built site: the page-weight budget and `security.txt` ([site-settings.md](site-settings.md)). `ci / ci` runs the same command: `pnpm install --frozen-lockfile && pnpm test`.
 
 ## 4. Build the static files
 
@@ -61,7 +61,7 @@ Stop the container with Ctrl+C.
 
 ## 6. Your first PR
 
-1. Create a branch, change a page in `src/pages/` or an article in `src/content/articles/`, and run `pnpm test`.
+1. Create a branch, change a page in `src/pages/[...lang]/` or an article in `src/content/articles/<language>/`, and run `pnpm test`.
 2. Push the branch and open a PR. The PR template asks for screenshots of the pages you changed.
 3. `ci / ci` must pass, and a reviewer from the code owners must approve. Then squash-merge.
 

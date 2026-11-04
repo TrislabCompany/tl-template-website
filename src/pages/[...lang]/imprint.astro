@@ -1,0 +1,52 @@
+---
+// The company's legal details, from src/site.config.ts. Built only when
+// legalPages.imprint is true.
+import { languagePaths, t, type Lang } from "../../i18n";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import site from "../../site.config";
+
+export function getStaticPaths() {
+  return site.legalPages.imprint ? languagePaths() : [];
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const { company, contact } = site;
+const firstTopic = contact.topics[0];
+---
+
+<BaseLayout title={t(lang, "legal.imprint")} lang={lang}>
+  <h1>{t(lang, "legal.imprint")}</h1>
+  <dl class="imprint">
+    <dt>{t(lang, "imprint.company")}</dt>
+    <dd>{company.legalName}</dd>
+    <dt>{t(lang, "imprint.address")}</dt>
+    <dd>{`${company.address.street}, ${company.address.postalCode} ${company.address.city}`}</dd>
+    {
+      company.registrationNumber && (
+        <>
+          <dt>{t(lang, "imprint.registrationNumber")}</dt>
+          <dd>{company.registrationNumber}</dd>
+        </>
+      )
+    }
+    {
+      company.vatId && (
+        <>
+          <dt>{t(lang, "imprint.vatId")}</dt>
+          <dd>{company.vatId}</dd>
+        </>
+      )
+    }
+    {
+      firstTopic && (
+        <>
+          <dt>{t(lang, "imprint.contact")}</dt>
+          <dd>
+            <a href={`mailto:${firstTopic.email}`}>{firstTopic.email}</a>
+          </dd>
+        </>
+      )
+    }
+  </dl>
+  {company.imprintNotes?.map((note) => <p>{note[lang]}</p>)}
+</BaseLayout>

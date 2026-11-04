@@ -1,0 +1,14 @@
+---
+import type { CollectionEntry } from "astro:content";
+import LegalPage from "../../components/LegalPage.astro";
+import type { Lang } from "../../i18n";
+import { legalPaths } from "../../lib/legal";
+
+export function getStaticPaths() {
+  return legalPaths("privacy");
+}
+
+const { lang, entry } = Astro.props as { lang: Lang; entry: CollectionEntry<"legal"> };
+---
+
+<LegalPage lang={lang} entry={entry} />

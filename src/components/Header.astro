@@ -1,20 +1,32 @@
 ---
+import { localizedPath, t, type Lang } from "../i18n";
+import site from "../site.config";
+import LanguageSwitch from "./LanguageSwitch.astro";
+
+interface Props {
+  lang: Lang;
+  path: string;
+  available?: readonly Lang[];
+}
+
+const { lang, path, available } = Astro.props;
 const links = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
+  { href: "/", label: t(lang, "nav.home") },
+  { href: "/about", label: t(lang, "nav.about") },
+  { href: "/contact", label: t(lang, "nav.contact") },
 ];
-const path = Astro.url.pathname.replace(/\/$/, "") || "/";
 ---
 
 <header class="site-header">
-  <a class="brand" href="/">Website template</a>
-  <nav aria-label="Main">
+  <a class="brand" href={localizedPath(lang)}>{site.name}</a>
+  <nav aria-label={t(lang, "nav.main")}>
     {
       links.map(({ href, label }) => (
-        <a href={href} aria-current={path === href ? "page" : undefined}>
+        <a href={localizedPath(lang, href)} aria-current={path === href ? "page" : undefined}>
           {label}
         </a>
       ))
     }
   </nav>
+  <LanguageSwitch lang={lang} path={path} available={available} />
 </header>

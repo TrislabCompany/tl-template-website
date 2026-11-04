@@ -1,30 +1,53 @@
 ---
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import StructuredData from "../components/StructuredData.astro";
+import { defaultLanguage, languages, localizedPath, unlocalizedPath, type Lang } from "../i18n";
+import site from "../site.config";
 
 interface Props {
   title: string;
   description?: string;
+  lang: Lang;
+  /** The languages this page exists in; by default all of them. */
+  available?: readonly Lang[];
+  /** Leave the page out of search engines (the 404 page). */
+  noindex?: boolean;
 }
 
-const { title, description = "A sample site built from tl-template-website." } = Astro.props;
+const { title, description = site.description[Astro.props.lang], lang, available = languages, noindex } = Astro.props;
+
+// The page without its language prefix, for the alternates and the switch.
+const path = unlocalizedPath(Astro.url.pathname);
+const absolute = (target: Lang) => new URL(localizedPath(target, path), site.url).toString();
+const alternates = available.length > 1 ? available : [];
+const fullTitle = title === site.name ? title : `${title} | ${site.name}`;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title}</title>
+    <title>{fullTitle}</title>
+    {!noindex && <link rel="canonical" href={absolute(lang)} />}
+    {!noindex && alternates.map((other) => <link rel="alternate" hreflang={other} href={absolute(other)} />)}
+    {
+      !noindex && alternates.includes(defaultLanguage) && (
+        <link rel="alternate" hreflang="x-default" href={absolute(defaultLanguage)} />
+      )
+    }
+    <StructuredData />
   </head>
   <body>
-    <Header />
+    <Header lang={lang} path={path} available={available} />
     <main>
       <slot />
     </main>
-    <Footer />
+    <Footer lang={lang} />
   </body>
 </html>
 
@@ -98,9 +121,15 @@ const { title, description = "A sample site built from tl-template-website." } =
     font-size: 0.875rem;
   }
 
-  .site-header nav {
+  .site-header nav,
+  .site-footer nav {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
+  }
+
+  .language-switch [aria-current] {
+    font-weight: 600;
   }
 
   .site-header a {
