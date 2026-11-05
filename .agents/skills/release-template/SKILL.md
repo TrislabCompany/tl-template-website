@@ -44,7 +44,7 @@ The `template-release` workflow does the tagging. It runs when `ci` passes on a 
 
 1. The release PR is merged. Take its merge commit on `origin/main` (full SHA) and its run: `gh run list --workflow template-release.yml --limit 5`.
 2. **The run succeeded:** check that the tag points to the commit (`git ls-remote origin 'refs/tags/<template>/vX.Y.Z^{}'`) and that the Release exists (`gh release view <template>/vX.Y.Z`).
-3. **No run, or it failed:** read the failure (`gh run view <id> --log-failed`) and fix the cause. A ruleset refusal means GitHub Actions is not a bypass actor of `release-tag-creation`: tell an admin, since that is a one-time setup. Then start it: `gh workflow run template-release.yml -f version=vX.Y.Z`, watch it with `gh run watch`, and check again as in 2.
+3. **No run, or it failed:** read the failure (`gh run view <id> --log-failed`) and fix the cause. A ruleset refusal means the org's release GitHub App is not a bypass actor of `release-tag-creation`; a token error means the org variable `RELEASE_APP_ID` or secret `RELEASE_APP_PRIVATE_KEY` is missing or not given to this repository. Tell an org owner: both are one-time setups. Then start it: `gh workflow run template-release.yml -f version=vX.Y.Z`, watch it with `gh run watch`, and check again as in 2.
 4. Once tagged, the canary takes it first: suggest `update-from-template` in `trislab-website-corporate-site` for the website template, or the first `active` repository of this template in `catalog/repos.yaml` of `tl-cloud-infrastructure` for the others. The other repositories follow once the canary's update is merged and deployed.
 
 ## Rules

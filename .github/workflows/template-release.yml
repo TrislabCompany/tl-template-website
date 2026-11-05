@@ -6,7 +6,10 @@ name: template-release
 # commit, pushes that tag alone, and creates the GitHub Release with the notes.
 # Run it by hand with a version to publish a release that is already merged.
 # Template-only: never copied to a product repository. Nobody tags by hand.
-# Needs GitHub Actions as a bypass actor of the tag ruleset release-tag-creation.
+# The tag and the Release are made with a token of the org's GitHub App (org
+# variable RELEASE_APP_ID, org secret RELEASE_APP_PRIVATE_KEY), which is a bypass
+# actor of the tag ruleset release-tag-creation. A tag pushed with that token
+# starts workflows, but <template>/vX.Y.Z never matches release.yml's v*.
 
 on:
   workflow_run:
@@ -32,11 +35,20 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       checks: read
     steps:
+      - name: Token of the release App
+        id: app
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
       - uses: actions/checkout@v4
         with:
+          token: ${{ steps.app.outputs.token }}
           ref: main
           fetch-depth: 0
           fetch-tags: true
@@ -91,6 +103,8 @@ jobs:
           VERSION: ${{ steps.find.outputs.version }}
           TEMPLATE: ${{ steps.find.outputs.template }}
           TAG: ${{ steps.find.outputs.tag }}
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
         run: |
           set -euo pipefail
           remote=$(git ls-remote origin "refs/tags/$TAG" "refs/tags/$TAG^{}" | tail -1 | cut -f1)
@@ -104,16 +118,18 @@ jobs:
             echo "::error::$VERSION is not higher than $highest"
             exit 1
           fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          bot="$APP_SLUG[bot]"
+          bot_id=$(gh api "users/$bot" --jq .id)
+          git config user.name "$bot"
+          git config user.email "$bot_id+$bot@users.noreply.github.com"
           git tag -a "$TAG" "$SHA" -m "$TEMPLATE $VERSION"
           git push origin "refs/tags/$TAG" \
-            || { echo "::error::Pushing $TAG was refused. Is GitHub Actions a bypass actor of the tag ruleset release-tag-creation?"; exit 1; }
+            || { echo "::error::Pushing $TAG was refused. Is the App $APP_SLUG a bypass actor of the tag ruleset release-tag-creation?"; exit 1; }
 
       - name: GitHub Release
         if: steps.find.outputs.release == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app.outputs.token }}
           VERSION: ${{ steps.find.outputs.version }}
           TEMPLATE: ${{ steps.find.outputs.template }}
           TAG: ${{ steps.find.outputs.tag }}
