@@ -1,0 +1,36 @@
+name: promote
+
+# Promotes a released version to an Environment of the prod tier, by hand:
+# checks that its images run healthy in a release tier Environment of the same
+# owner (or ran in the target before, for a rollback), waits for the
+# Environment's reviewers, and deploys the same digests. Builds nothing. All
+# steps live in the reusable workflow in tl-platform, pinned by tag. Change
+# nothing here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The version to promote, vX.Y.Z
+        type: string
+        required: true
+      environment:
+        description: The Environment of the prod tier
+        type: string
+        required: true
+        default: prod
+
+permissions: {}
+
+jobs:
+  promote:
+    permissions:
+      contents: read
+      packages: read
+      deployments: write
+      id-token: write
+      actions: read
+    uses: TrislabCompany/tl-platform/.github/workflows/app-promote.yml@app-workflows/v0.3.0
+    with:
+      version: ${{ inputs.version }}
+      environment: ${{ inputs.environment }}

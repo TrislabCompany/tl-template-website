@@ -76,7 +76,7 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 1. **Set the site's facts:** languages, company, contact and legal pages in `src/site.config.ts` ([site-settings.md](docs/site-settings.md)).
 2. **Run it locally:** `pnpm install`, then `pnpm dev`, and open <http://localhost:4321>. Run `pnpm test` before you push. [getting-started.md](docs/getting-started.md) also runs it as the image.
 3. **Open your first PR:** change a page in `src/pages/[...lang]/`, push a branch and open a PR. `ci / ci` must pass and a code owner must approve.
-4. **Deploy, release and promote:** a merge to `main` deploys to `dev`, a tag `vX.Y.Z` releases to the `release` tier, and a promotion moves a release to production. `deploy.yml` and `release.yml` do the first two, and the platform adds `promote.yml` before the first production Environment; [deployment.md](docs/deployment.md) explains how they work, and [its steps for developers](docs/deployment.md#steps-for-developers) lists your steps. The `release` skill runs them: ask the agent for `release deploy`, `release tag` or `release status` ([Release with the agent](docs/deployment.md#release-with-the-agent)).
+4. **Deploy, release and promote:** a merge to `main` deploys to `dev`, a tag `vX.Y.Z` releases to the `release` tier, and a promotion moves a release to production. `deploy.yml`, `release.yml` and `promote.yml` do them; [deployment.md](docs/deployment.md) explains how they work, and [its steps for developers](docs/deployment.md#steps-for-developers) lists your steps. The `release` skill runs them: ask the agent for `release deploy`, `release tag` or `release status` ([Release with the agent](docs/deployment.md#release-with-the-agent)).
 
 ## More
 
