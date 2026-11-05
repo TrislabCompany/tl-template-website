@@ -32,7 +32,7 @@ flowchart LR
 | Release | `release.yml`, on a tag `vX.Y.Z` on a commit of `main` | Builds nothing. Adds the tag to that commit's image, creates the GitHub Release, and deploys it to every `release` tier Environment |
 | Promote | `promote.yml`, by hand with a version and an Environment | Checks that the version runs healthy in a `release` tier Environment, waits for the reviewers, and deploys the same image. Rolling back is promoting the previous version |
 
-This template has `ci.yml`, `deploy.yml` and `release.yml`. The platform team adds `promote.yml` before the first production Environment. In a template repository, `deploy.yml` and `release.yml` skip every job, because a template deploys nowhere. In a repository created from the template they run as above.
+This template has `ci.yml`, `deploy.yml`, `release.yml` and `promote.yml`. `promote.yml` does nothing until the repository has a `prod` Environment, which the platform team adds with the production stamp. In a template repository, `deploy.yml`, `release.yml` and `promote.yml` skip every job, because a template deploys nowhere. In a repository created from the template they run as above.
 
 Each workflow is a thin caller of a reusable workflow in `tl-platform`, pinned to a tag `app-workflows/v<x.y.z>`. Don't add steps to them: the platform team changes the reusable workflows, and a PR bumps the tag in your repository.
 
@@ -135,7 +135,7 @@ A tag is never moved or deleted once it is pushed. A wrong release is replaced b
 
 ### Promote to `prod`
 
-Only when the repository has a `prod` Environment and `promote.yml`, which the platform team adds before the first production Environment.
+Only when the repository has a `prod` Environment, which the platform team adds with the production stamp. The version must run healthy in a `release` tier Environment such as `staging`, or have run in `prod` before, for a rollback.
 
 1. The version must run, healthy, in a `release` tier Environment (`test` or `staging`). Check: `gh api "repos/{owner}/{repo}/deployments?environment=staging&per_page=1" --jq '.[0].ref'`.
 2. Run the promotion: `gh workflow run promote.yml -f version=v1.2.0 -f environment=prod`.
