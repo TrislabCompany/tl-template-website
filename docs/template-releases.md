@@ -31,7 +31,15 @@ How developers deploy and release is written in two places that must agree: `doc
 
 ## Releasing
 
-The `release-template` skill does these steps:
+Ask the coding agent in this repository. It follows the `release-template` skill ([.agents/skills/release-template/SKILL.md](../.agents/skills/release-template/SKILL.md)), which runs the steps below for you. Type the command, or say it in your own words ("release the template", "is the template release tagged?").
+
+| You type | What it checks | What it changes | Asks first |
+| --- | --- | --- | --- |
+| `release-template status` | Nothing | Nothing. It shows the last `template-website/v*` tag and the PRs merged since then, with each path's ownership | No |
+| `release-template prepare` | The changes since the last tag, the breaking rules, that the version is new and higher than every tag, `pnpm test` | Steps 1–3: a branch with the notes and their row in the table below, and the release PR. Nothing is tagged | Yes: the version and its reason |
+| `release-template tag` | Step 4: that the workflow ran on the merge commit, that the tag points to it and that the Release exists | Nothing when all is there. Otherwise it reads the failure and starts the `template-release` workflow with the version | No |
+
+The steps:
 
 1. Choose the version from the changes since the last tag. **Breaking** means removing or renaming a path that products use, changing a `docs/` heading a skill links to, renaming a skill or a command, adding a skill name, a new required variable, secret or `platform.yaml` field, or needing a newer `app-workflows` major. Breaking is a major version (a minor under `0.x`); a feature is a minor; a fix is a patch.
 2. Write the notes `docs/upgrading/template-vX.Y.Z.md` (Breaking, Requires, Changes by ownership, Upgrade steps) and add a row to the table below.
