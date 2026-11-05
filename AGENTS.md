@@ -14,7 +14,8 @@ This file is the guide for every AI coding tool (Claude Code, Cursor, Codex, …
 | `Dockerfile`, `nginx/`, `docker-entrypoint.d/` | The image, nginx's configuration, and the script that writes `/config.json` |
 | `platform.yaml` | The image and the sizing of the app, within the stamp's caps ([docs/deployment.md](docs/deployment.md#platformyaml-and-the-caps)) |
 | `.github/workflows/` | Thin callers of the platform's reusable workflows |
-| `.agents/skills/` | The skills below; the only place skills live |
+| `.agents/skills/` | The skills below; the only place skills are written |
+| `.claude/skills/` | One pointer per skill, with the same front matter, so that Claude Code lists it |
 | `.template-version` | The template release this repository was last updated to ([docs/upgrading/README.md](docs/upgrading/README.md)) |
 
 ## Rules
@@ -29,7 +30,7 @@ This file is the guide for every AI coding tool (Claude Code, Cursor, Codex, …
 
 ## Skills
 
-Skills live only in `.agents/skills/<name>/SKILL.md`. When a task matches a skill, read that file and follow it.
+Skills live only in `.agents/skills/<name>/SKILL.md`. When a task matches a skill, read that file and follow it. Claude Code finds skills only in `.claude/skills/`, so each skill also has a pointer `.claude/skills/<name>/SKILL.md`: the same front matter, and a body that sends the agent to the real file. Add one with every new skill; `pnpm test` fails without it.
 
 ### Template skills
 

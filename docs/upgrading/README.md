@@ -29,7 +29,7 @@ The template's `template-manifest.yaml` gives every path one ownership. An updat
 
 ## Your own skills
 
-A folder in `.agents/skills/` that the template's manifest doesn't list is a **project skill**. An update never reads, changes or deletes it. Give it `metadata.owner: project` in its front matter and list it in the "Project skills" table of `AGENTS.md`. The "Template skills" block of `AGENTS.md`, between `<!-- template-skills:start -->` and `<!-- template-skills:end -->`, is rewritten by every update.
+A folder in `.agents/skills/` that the template's manifest doesn't list is a **project skill**. An update never reads, changes or deletes it. Give it `metadata.owner: project` in its front matter and list it in the "Project skills" table of `AGENTS.md`. So that Claude Code lists it, add a pointer `.claude/skills/<name>/SKILL.md` with the same front matter and one line: read `.agents/skills/<name>/SKILL.md` and follow it. The "Template skills" block of `AGENTS.md`, between `<!-- template-skills:start -->` and `<!-- template-skills:end -->`, is rewritten by every update.
 
 When a template release adds a skill with the name of one of yours, the update stops and asks you to rename yours first.
 

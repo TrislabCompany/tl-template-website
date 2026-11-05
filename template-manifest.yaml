@@ -10,6 +10,8 @@ template: template-website
 
 # The template's skills, in .agents/skills/<name>/. Any other folder there is a project skill,
 # which an update never reads, changes or deletes. Each skill's front matter repeats its ownership.
+# Each skill also has a pointer, .claude/skills/<name>/SKILL.md, with the same front matter:
+# Claude Code finds skills only there. It has the skill's ownership.
 skills:
   release: platform
   update-from-template: platform
@@ -19,6 +21,7 @@ paths:
   # Maintaining the template itself
   - { path: template-manifest.yaml, ownership: template-only }
   - { path: .agents/skills/release-template/**, ownership: template-only }
+  - { path: .claude/skills/release-template/**, ownership: template-only }
   - { path: docs/template-releases.md, ownership: template-only }
   - { path: docs/upgrading/template-*.md, ownership: template-only }
 
@@ -26,6 +29,8 @@ paths:
   - { path: .github/workflows/*, ownership: platform }
   - { path: .agents/skills/release/**, ownership: platform }
   - { path: .agents/skills/update-from-template/**, ownership: platform }
+  - { path: .claude/skills/release/**, ownership: platform }
+  - { path: .claude/skills/update-from-template/**, ownership: platform }
   - { path: docs/upgrading/README.md, ownership: platform }
   - { path: CLAUDE.md, ownership: platform }
   - { path: platform.schema.json, ownership: platform }

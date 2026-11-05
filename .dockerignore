@@ -15,6 +15,7 @@ Dockerfile
 .dockerignore
 README.md
 .agents
+.claude
 AGENTS.md
 CLAUDE.md
 .template-version

@@ -67,7 +67,7 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 | `Dockerfile`, `nginx/`, `docker-entrypoint.d/` | The image: the build, nginx's configuration, and the script that writes `/config.json` |
 | `platform.yaml` | The image and the sizing of the app, within the stamp's caps |
 | `.github/` | The `ci`, `deploy` and `release` workflows, the PR template and the code owners |
-| `AGENTS.md`, `CLAUDE.md`, `.agents/skills/` | The guide for coding agents and their skills: `release` and `update-from-template` |
+| `AGENTS.md`, `CLAUDE.md`, `.agents/skills/`, `.claude/skills/` | The guide for coding agents and their skills: `release` and `update-from-template` |
 | `template-manifest.yaml` | The ownership of every path, for template updates. Only in the template |
 | `docs/` | The detail behind this README |
 

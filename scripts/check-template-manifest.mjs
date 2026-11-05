@@ -1,6 +1,7 @@
 // Checks template-manifest.yaml in a template repository (docs/template-releases.md):
 // every file has an ownership, every skill folder is listed with matching front matter,
-// and the template block of AGENTS.md lists the skills a product repository gets.
+// every skill has a .claude/skills/<name>/SKILL.md pointer with the same front matter and ownership
+// (Claude Code finds skills only there), and the template block of AGENTS.md lists the skills a product repository gets.
 // A product repository has no manifest, so there the check passes at once.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -59,10 +60,11 @@ export function blockSkills(agentsMd) {
  * @param {object} input.manifest  the parsed template-manifest.yaml
  * @param {string[]} input.files   every path of the repository
  * @param {Record<string, string>} input.skillFiles  folder name -> SKILL.md text (undefined when missing)
+ * @param {Record<string, string>} [input.pointerFiles]  .claude/skills folder name -> SKILL.md text (undefined when missing)
  * @param {string | undefined} input.agentsMd
  * @returns {string[]} the errors
  */
-export function checkManifest({ manifest, files, skillFiles, agentsMd }) {
+export function checkManifest({ manifest, files, skillFiles, pointerFiles = {}, agentsMd }) {
   const errors = [];
   if (!/^template-(website|webapp|saas)$/.test(manifest.template ?? '')) {
     errors.push(`template must be template-website, template-webapp or template-saas, not ${manifest.template}`);
@@ -104,6 +106,27 @@ export function checkManifest({ manifest, files, skillFiles, agentsMd }) {
     }
   }
 
+  for (const [name, text] of Object.entries(skillFiles)) {
+    if (text === undefined) continue;
+    const pointer = pointerFiles[name];
+    if (pointer === undefined) {
+      errors.push(`skill ${name} has no pointer .claude/skills/${name}/SKILL.md`);
+      continue;
+    }
+    if (JSON.stringify(frontMatter(pointer)) !== JSON.stringify(frontMatter(text))) {
+      errors.push(`.claude/skills/${name}/SKILL.md: front matter must be the same as .agents/skills/${name}/SKILL.md`);
+    }
+    if (name in skills) {
+      const pointerOwnership = ownershipOf(manifest, `.claude/skills/${name}/SKILL.md`);
+      if (pointerOwnership !== skills[name]) {
+        errors.push(`skill ${name} is ${skills[name]} but its pointer's path is ${pointerOwnership}`);
+      }
+    }
+  }
+  for (const name of Object.keys(pointerFiles)) {
+    if (!(name in skillFiles)) errors.push(`.claude/skills/${name} points to no skill in .agents/skills/`);
+  }
+
   const listed = agentsMd === undefined ? undefined : blockSkills(agentsMd);
   if (listed === undefined) {
     errors.push(`AGENTS.md needs a template skills block between ${BLOCK_START} and ${BLOCK_END}`);
@@ -120,6 +143,18 @@ export function checkManifest({ manifest, files, skillFiles, agentsMd }) {
   return errors;
 }
 
+/** Folder name -> SKILL.md text (undefined when the folder has none). */
+function readSkills(dir) {
+  const out = {};
+  if (!existsSync(dir)) return out;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const file = `${dir}/${entry.name}/SKILL.md`;
+    out[entry.name] = existsSync(file) ? readFileSync(file, 'utf8') : undefined;
+  }
+  return out;
+}
+
 function main() {
   if (!existsSync('template-manifest.yaml')) {
     console.log('check-template-manifest: no template-manifest.yaml, not a template repository; skipped');
@@ -131,17 +166,10 @@ function main() {
   })
     .split('\0')
     .filter((f) => f && existsSync(f));
-  const skillsDir = '.agents/skills';
-  const skillFiles = {};
-  if (existsSync(skillsDir)) {
-    for (const entry of readdirSync(skillsDir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const file = `${skillsDir}/${entry.name}/SKILL.md`;
-      skillFiles[entry.name] = existsSync(file) ? readFileSync(file, 'utf8') : undefined;
-    }
-  }
+  const skillFiles = readSkills('.agents/skills');
+  const pointerFiles = readSkills('.claude/skills');
   const agentsMd = existsSync('AGENTS.md') ? readFileSync('AGENTS.md', 'utf8') : undefined;
-  const errors = checkManifest({ manifest, files, skillFiles, agentsMd });
+  const errors = checkManifest({ manifest, files, skillFiles, pointerFiles, agentsMd });
   if (errors.length) {
     for (const e of errors) console.error(`check-template-manifest: ${e}`);
     process.exit(1);
