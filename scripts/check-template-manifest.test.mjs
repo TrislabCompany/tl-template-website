@@ -8,6 +8,8 @@ const manifest = {
   paths: [
     { path: '.agents/skills/release-template/**', ownership: 'template-only' },
     { path: '.agents/skills/release/**', ownership: 'platform' },
+    { path: '.claude/skills/release-template/**', ownership: 'template-only' },
+    { path: '.claude/skills/release/**', ownership: 'platform' },
     { path: '.github/workflows/*', ownership: 'platform' },
     { path: 'src/**', ownership: 'product' },
     { path: 'AGENTS.md', ownership: 'shared' },
@@ -15,11 +17,16 @@ const manifest = {
 };
 const skill = (name, ownership) =>
   `---\nname: ${name}\ndescription: x\nmetadata:\n  owner: template-website\n  ownership: ${ownership}\n---\n# ${name}\n`;
+const pointer = (name, ownership) => `${skill(name, ownership).split('# ')[0]}Read .agents/skills/${name}/SKILL.md\n`;
 const agents = '# x\n<!-- template-skills:start -->\n| Skill | Use |\n| --- | --- |\n| [`release`](x) | y |\n<!-- template-skills:end -->\n';
 const valid = () => ({
   manifest,
   files: ['src/a/b.ts', '.github/workflows/ci.yml', 'AGENTS.md', '.agents/skills/release/SKILL.md'],
   skillFiles: { release: skill('release', 'platform'), 'release-template': skill('release-template', 'template-only') },
+  pointerFiles: {
+    release: pointer('release', 'platform'),
+    'release-template': pointer('release-template', 'template-only'),
+  },
   agentsMd: agents,
 });
 
@@ -66,4 +73,22 @@ test('the AGENTS.md block lists the skills a product gets, not template-only one
   assert.match(checkManifest(input).join('\n'), /expected \[release\]/);
   input.agentsMd = '# no block';
   assert.match(checkManifest(input).join('\n'), /needs a template skills block/);
+});
+
+test('every skill needs a pointer in .claude/skills with the same front matter', () => {
+  let input = valid();
+  delete input.pointerFiles.release;
+  assert.match(checkManifest(input).join('\n'), /skill release has no pointer/);
+
+  input = valid();
+  input.pointerFiles.release = pointer('release', 'platform').replace('description: x', 'description: other');
+  assert.match(checkManifest(input).join('\n'), /front matter must be the same/);
+
+  input = valid();
+  input.pointerFiles.gone = pointer('gone', 'platform');
+  assert.match(checkManifest(input).join('\n'), /\.claude\/skills\/gone points to no skill/);
+
+  input = valid();
+  input.manifest = { ...manifest, paths: manifest.paths.filter((r) => r.path !== '.claude/skills/release/**') };
+  assert.match(checkManifest(input).join('\n'), /its pointer's path is undefined/);
 });

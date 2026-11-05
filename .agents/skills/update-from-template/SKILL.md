@@ -38,7 +38,7 @@ This file is owned by the platform and is the same in every template. A product 
 4. **Choose the target:** the next minor version after the base (`v0.1.x` → the highest `v0.2.*`), never more than one minor per PR. Within the same minor, the highest patch. When there is none, stop: the repository is up to date.
 5. **Read the notes** of every release after the base up to the target: `git show refs/template/<template>/<target>:docs/upgrading/template-<version>.md`. Collect **Requires**, **Breaking** and **Upgrade steps**. When a required `app-workflows` version is higher than the one the callers in `.github/workflows/` pin, stop until the PR that bumps it is merged.
 6. **Read both manifests:** `template-manifest.yaml` at the base and at the target. A path's ownership is the first rule that matches it in the target's manifest; for a path the target deletes, in the base's.
-7. **Check skill names.** A skill folder in `.agents/skills/` that is not in the base manifest's `skills` is a project skill. When the target's `skills` adds a name that a project skill uses, stop and ask the team to rename theirs first. Never read, change or delete a project skill.
+7. **Check skill names.** A skill folder in `.agents/skills/` that is not in the base manifest's `skills` is a project skill. When the target's `skills` adds a name that a project skill uses, stop and ask the team to rename theirs first. Never read, change or delete a project skill, or its pointer `.claude/skills/<name>/`.
 8. **List the changed paths:** `git diff --name-status --no-renames refs/template/<template>/<base> refs/template/<template>/<target>`. Apply each by its ownership:
 
    | Ownership | Added or changed in the template | Deleted in the template |
@@ -61,7 +61,7 @@ A repository created before `.template-version` existed has no base. Its first u
 - **`platform`** paths are copied from the target as usual.
 - **`shared`** paths have no base to merge from. Compare this repository's file with the target's (`git diff --no-index`, or `git diff HEAD refs/template/<template>/<target> -- <path>`). Take the template's change where this repository never changed the file, keep the repository's change where it is clearly its own, and list each file and what was taken in the PR body.
 - **`product`** paths are left alone.
-- **Template skills found in an old location** (e.g. `.claude/skills/<name>/`) are deleted once the same skill is copied to `.agents/skills/<name>/`. Any other folder there is moved to `.agents/skills/` as a project skill, with `metadata.owner: project`, after a yes.
+- **Template skills found in an old location** (a full skill in `.claude/skills/<name>/`, not a pointer) are replaced by the template's pointer once the same skill is copied to `.agents/skills/<name>/`. Any other full skill there is moved to `.agents/skills/` as a project skill, with `metadata.owner: project`, after a yes, and gets a pointer in its place.
 - `.template-version` is written for the first time.
 
 ## Rules

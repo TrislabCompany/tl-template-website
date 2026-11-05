@@ -11,6 +11,7 @@ For the template's maintainers. This page is `template-only`: product repositori
 - a file matches no rule;
 - a folder in `.agents/skills/` isn't listed under `skills`, or a listed skill has no `SKILL.md`;
 - a skill's front matter doesn't match its ownership, or its path has another ownership;
+- a skill has no pointer `.claude/skills/<name>/SKILL.md` with the same front matter and ownership, or a pointer has no skill;
 - the template block of `AGENTS.md` doesn't list exactly the `platform` and `shared` skills.
 
 In a product repository there is no manifest, and the check passes at once.
