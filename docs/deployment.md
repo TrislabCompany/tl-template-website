@@ -2,7 +2,7 @@
 
 The platform builds the image once for each commit on `main`, and moves that same image, by its digest, from Environment to Environment. Nothing is rebuilt for production. You never deploy by hand and never create infrastructure yourself.
 
-## 1. Environments and tiers
+## Environments and tiers
 
 Each Environment of the repository is one stamp: a Container Apps environment with the `web` app, in Azure. Each belongs to a tier:
 
@@ -14,7 +14,7 @@ Each Environment of the repository is one stamp: a Container Apps environment wi
 
 A new repository starts with `dev`. Your team asks for another Environment through the platform team's onboarding form.
 
-## 2. From PR to production
+## From PR to production
 
 ```mermaid
 flowchart LR
@@ -38,13 +38,13 @@ Each workflow is a thin caller of a reusable workflow in `tl-platform`, pinned t
 
 A deploy starts a new revision of the app. The revision gets traffic only once `/readyz` answers, and the previous one keeps serving until then. A deploy that fails leaves the Environment on the version it had.
 
-## 3. Images
+## Images
 
 Images are stored in GHCR as `ghcr.io/trislabcompany/<repository>/web`. They are private, also when the repository is public. The stamps pull them with the platform's pull token. You don't need to do anything for this.
 
 Trivy scans the image in every workflow. It fails on any secret in the image, and on a CRITICAL or HIGH vulnerability that has a fix. To accept a finding, add its ID to `.trivyignore` with a reason and an expiry date on the line above it; `devops` reviews that change.
 
-## 4. `platform.yaml` and the caps
+## `platform.yaml` and the caps
 
 `platform.yaml` says which image the repository builds and how the app is sized:
 
@@ -66,7 +66,7 @@ environments:
     web: { min_replicas: 1, max_replicas: 4 }
 ```
 
-## 5. Asking for more
+## Asking for more
 
 Raising a cap, adding an Environment, a setting or a custom domain is a change to the stamp, not to this repository. Each Environment is a stamp in `tl-cloud-infrastructure`, under `stamps/<landing zone>/<folder>/stamp.yaml`.
 
@@ -77,11 +77,11 @@ Raising a cap, adding an Environment, a setting or a custom domain is a change t
 
 Your team may open these PRs: the stamp's folder lists your team as a code owner next to the platform team. The infrastructure pipeline plans the change, the platform team approves the apply, and the next deploy can use the new caps. For an Environment or a custom domain, ask the platform team.
 
-## 6. Steps for developers
+## Steps for developers
 
-What you do yourself, in order. Section 2 says what each workflow does. The `release` skill (`.claude/skills/release/SKILL.md`) runs the same steps with an agent, and asks before every tag, promotion and rollback.
+What you do yourself, in order. [From PR to production](#from-pr-to-production) says what each workflow does. The `release` skill (`.agents/skills/release/SKILL.md`) runs the same steps with an agent, and asks before every tag, promotion and rollback.
 
-### 6.1 Ship a change to `dev`
+### Ship a change to `dev`
 
 1. Branch from `main`, commit, and open a PR to `main`.
 2. Wait for the check `ci / ci`: `gh pr checks <pr> --watch`.
@@ -89,7 +89,7 @@ What you do yourself, in order. Section 2 says what each workflow does. The `rel
 4. `deploy.yml` runs on the merge commit. Watch it: `gh run list --workflow deploy.yml --branch main --limit 1`, then `gh run watch <run id>`.
 5. Check the change in `dev`. The address of each Environment comes from the platform team with the Environment.
 
-### 6.2 Release to `test` or `staging`
+### Release to `test` or `staging`
 
 1. Pick the commit on `main` to release. Its `deploy.yml` run must have passed: `release.yml` builds nothing and refuses a commit that is not on `main` or has no images.
 2. Choose the version. Raise `X` for a change that breaks something for users, `Y` for a new feature, `Z` for a fix. A release candidate is `vX.Y.Z-rc.<n>`: it reaches the `release` tier but can never be promoted to `prod`.
@@ -105,7 +105,7 @@ What you do yourself, in order. Section 2 says what each workflow does. The `rel
 
 A tag is never moved or deleted once it is pushed. A wrong release is replaced by the next version.
 
-### 6.3 Promote to `prod`
+### Promote to `prod`
 
 Only when the repository has a `prod` Environment and `promote.yml`, which the platform team adds before the first production Environment.
 
@@ -114,20 +114,20 @@ Only when the repository has a `prod` Environment and `promote.yml`, which the p
 3. A reviewer of the `prod` Environment approves the waiting job on GitHub.
 4. Watch the run and check production.
 
-### 6.4 Roll back
+### Roll back
 
-- **`prod`:** promote the previous version, the same way as in 6.3. No image is rebuilt.
+- **`prod`:** promote the previous version, the same way as in [Promote to `prod`](#promote-to-prod). No image is rebuilt.
 - **`dev` and the `release` tier:** fix forward. Revert the change on `main` through a PR, then tag a new version if the `release` tier needs it.
 
-### 6.5 When a run fails
+### When a run fails
 
-- **`ci / ci` fails:** the PR can't merge. Read the failed steps with `gh run view <run id> --log-failed`. A Trivy finding is fixed or accepted in `.trivyignore` (section 3); a value above a cap is lowered in `platform.yaml` or the cap is raised (sections 4 and 5).
+- **`ci / ci` fails:** the PR can't merge. Read the failed steps with `gh run view <run id> --log-failed`. A Trivy finding is fixed or accepted in `.trivyignore` ([Images](#images)); a value above a cap is lowered in `platform.yaml` or the cap is raised ([`platform.yaml` and the caps](#platformyaml-and-the-caps), [Asking for more](#asking-for-more)).
 - **`deploy.yml`, `release.yml` or `promote.yml` fails:** the Environment stays on the version it had. Read the log, fix, and merge, tag or promote again.
 - **The new revision never becomes ready:** its `/readyz` did not answer. Run the image locally and check `/readyz` before you try again.
 - **`promote.yml` refuses the version:** it does not run healthy in a `release` tier Environment, or it is a release candidate.
 - **Sign-in, a missing Environment or a cap:** ask the platform team.
 
-### 6.6 What runs where
+### What runs where
 
 Every deploy is a GitHub deployment of its Environment, so the repository's **Deployments** page shows which version runs where. From the command line:
 

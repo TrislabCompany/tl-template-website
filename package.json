@@ -11,8 +11,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "astro check && pnpm run lint && pnpm run test:unit && astro build && pnpm run check:built",
+    "test": "pnpm run check:template && astro check && pnpm run lint && pnpm run test:unit && astro build && pnpm run check:built",
     "check:built": "node scripts/check-page-weight.mjs && node scripts/check-security-txt.mjs",
+    "check:template": "node scripts/check-template-manifest.mjs",
     "lint": "eslint .",
     "test:unit": "node --test \"scripts/*.test.mjs\"",
     "co2": "node scripts/co2-estimate.mjs"
@@ -29,7 +30,8 @@
     "eslint-plugin-astro": "3.2.1",
     "globals": "17.13.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.72.1"
+    "typescript-eslint": "8.72.1",
+    "yaml": "2.9.1"
   },
   "pnpm": {
     "ignoredBuiltDependencies": [
