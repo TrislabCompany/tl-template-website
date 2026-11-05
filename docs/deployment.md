@@ -77,9 +77,37 @@ Raising a cap, adding an Environment, a setting or a custom domain is a change t
 
 Your team may open these PRs: the stamp's folder lists your team as a code owner next to the platform team. The infrastructure pipeline plans the change, the platform team approves the apply, and the next deploy can use the new caps. For an Environment or a custom domain, ask the platform team.
 
+## Release with the agent
+
+You don't need to type `git` or `gh` commands to deploy or release. Ask the coding agent (Claude Code, Cursor, Codex, …) in this repository. It reads `AGENTS.md` and follows the `release` skill (`.agents/skills/release/SKILL.md`), which runs the [steps for developers](#steps-for-developers) below for you. Type the command, or say it in your own words ("release this to staging", "what runs where?").
+
+| You type | What it checks | What it changes | Asks first |
+| --- | --- | --- | --- |
+| `release status` | Nothing | Nothing. It lists each Environment with the version it runs ([What runs where](#what-runs-where)) | No |
+| `release deploy` | The newest commit on `main` has a `deploy.yml` run | Nothing itself. `deploy.yml` started on the merge; the skill watches it and reports whether `dev` runs that commit | No |
+| `release tag [vX.Y.Z]` | The skill's release tag requirements: the version's format, that it is new and higher than every tag, the bump size it proposes from the commits (with its reason), the commit on `main`, its images in GHCR, a warning when it is not what runs in `dev`, the `release` tier Environments, no other `release.yml` run, your permission | It pushes one annotated tag `vX.Y.Z`. `release.yml` then creates the GitHub Release and deploys the same image to every `release` tier Environment. No file in the repository changes, and nothing is rebuilt | Yes: the version, the commit, the changes since the last tag and the Environments |
+| `release promote <version> [environment]` | `promote.yml` exists, the version runs healthy in a `release` tier Environment, and it is not a release candidate when the target is `prod` | It starts `promote.yml`. A reviewer of the Environment approves it on GitHub | Yes |
+| `release rollback [environment]` | The version that ran before the current one in that Environment | It promotes that previous version | Yes |
+
+### A release, from start to end
+
+1. Ask the agent for the change. It runs `pnpm test` and opens the PR. `ci / ci` passes, and a code owner approves and merges.
+2. `release deploy`: `dev` now runs the merge commit. Check the change in `dev`.
+3. `release tag`: check the version it proposes and say yes. The `release` tier (for example `staging`) gets it.
+4. `release status`: `dev` runs the newest commit of `main`, and the `release` tier runs the tag.
+
+### What the skill never does
+
+- Move, delete or push again a tag. A wrong release is replaced by the next version.
+- Deploy with `az` or the portal, or start a workflow in a way this page doesn't describe.
+- Skip an Environment's reviewers.
+- Edit the workflows or `platform.yaml`.
+
+When a run fails, it reads the log and matches it to [When a run fails](#when-a-run-fails).
+
 ## Steps for developers
 
-What you do yourself, in order. [From PR to production](#from-pr-to-production) says what each workflow does. The `release` skill (`.agents/skills/release/SKILL.md`) runs the same steps with an agent, and asks before every tag, promotion and rollback.
+What you do yourself, in order. [From PR to production](#from-pr-to-production) says what each workflow does. The `release` skill (`.agents/skills/release/SKILL.md`) runs the same steps with an agent, and asks before every tag, promotion and rollback ([Release with the agent](#release-with-the-agent)). Use these commands when you work without one.
 
 ### Ship a change to `dev`
 
@@ -129,7 +157,15 @@ Only when the repository has a `prod` Environment and `promote.yml`, which the p
 
 ### What runs where
 
-Every deploy is a GitHub deployment of its Environment, so the repository's **Deployments** page shows which version runs where. From the command line:
+`dev` runs the newest commit of `main`: each merge deploys it, and no tag is made. Every `release` and `prod` tier Environment runs a tag `vX.Y.Z`. Every deploy is a GitHub deployment of its Environment, so the version is visible in three places:
+
+| Where | What it shows |
+| --- | --- |
+| `release status`, through the agent | Each Environment, the commit or tag it runs, and when it was deployed |
+| **Deployments** on the repository page, also under each Environment | The history of each Environment: every deploy, its commit or tag, and the workflow run that made it |
+| **Releases** on the repository page | Every version tag with its notes. Only the `release` and `prod` tiers run these |
+
+From the command line:
 
 ```bash
 gh api "repos/{owner}/{repo}/deployments?per_page=20" --jq '.[] | [.environment, .ref, .created_at] | @tsv'

@@ -25,7 +25,7 @@ This file is the guide for every AI coding tool (Claude Code, Cursor, Codex, …
 - **`platform.yaml` stays within the stamp's caps.** More needs a stamp change ([docs/deployment.md](docs/deployment.md#asking-for-more)).
 - **No secrets** in the repository, the image or `/config.json`. Settings come from the platform as `PLATFORM_*` and `PUBLIC_*` ([docs/configuration.md](docs/configuration.md)).
 - **The repository is public.** No personal data, client contracts, prices or internal addresses in code, docs, PRs or commits.
-- Never deploy by hand (`az`, the portal). The workflows deploy, and the `release` skill runs them.
+- **Deploy and release with the `release` skill** ([docs/deployment.md](docs/deployment.md#release-with-the-agent)): `dev` runs the newest `main`, and the `release` tier runs tags. Never deploy by hand (`az`, the portal).
 
 ## Skills
 
