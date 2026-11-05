@@ -4,7 +4,9 @@ name: template-release
 # passed on a push to main whose commit added docs/upgrading/template-vX.Y.Z.md
 # (the merged release PR), it creates the annotated tag <template>/vX.Y.Z on that
 # commit, pushes that tag alone, and creates the GitHub Release with the notes.
-# Run it by hand with a version to publish a release that is already merged.
+# Run it by hand with a version to publish a release that is already merged. When
+# ci failed on the commit that added the notes, a run by hand tags the first later
+# commit on main where ci passed, but never past the next release's notes.
 # Template-only: never copied to a product repository. Nobody tags by hand.
 # The tag and the Release are made with a token of the org's GitHub App (org
 # variable RELEASE_APP_ID, org secret RELEASE_APP_PRIVATE_KEY), which is a bypass
@@ -79,10 +81,20 @@ jobs:
             version="$INPUT_VERSION"
             notes="docs/upgrading/template-$version.md"
             [ -f "$notes" ] || { echo "::error::$notes is not on main"; exit 1; }
-            sha=$(git log --first-parent --diff-filter=A --format=%H -1 main -- "$notes")
-            ci=$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/check-runs?check_name=ci%20%2F%20ci" \
-              --jq '[.check_runs[] | select(.conclusion == "success")] | length')
-            [ "$ci" -gt 0 ] || { echo "::error::ci / ci has not passed on $sha"; exit 1; }
+            # The commit that added the notes, or, when ci failed there, the first later
+            # commit on main where ci passed, before the commit that adds the next notes.
+            added=$(git log --first-parent --diff-filter=A --format=%H -1 main -- "$notes")
+            sha=""
+            for c in "$added" $(git rev-list --first-parent --reverse "$added..main"); do
+              if [ "$c" != "$added" ] && [ -n "$(git diff --diff-filter=A --name-only "$c^" "$c" -- 'docs/upgrading/template-v*.md')" ]; then
+                break
+              fi
+              ci=$(gh api "repos/$GITHUB_REPOSITORY/commits/$c/check-runs?check_name=ci%20%2F%20ci" \
+                --jq '[.check_runs[] | select(.conclusion == "success")] | length')
+              if [ "$ci" -gt 0 ]; then sha="$c"; break; fi
+            done
+            [ -n "$sha" ] || { echo "::error::ci / ci has not passed on $added or a later commit before the next release"; exit 1; }
+            [ "$sha" = "$added" ] || echo "ci / ci did not pass on $added, which added $notes: tagging $sha, the first later commit where it passed." >> "$GITHUB_STEP_SUMMARY"
           fi
 
           [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::$version is not vX.Y.Z"; exit 1; }
