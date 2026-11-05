@@ -14,4 +14,9 @@ docs
 Dockerfile
 .dockerignore
 README.md
+.agents
+AGENTS.md
+CLAUDE.md
+.template-version
+template-manifest.yaml
 page-weight-report.json

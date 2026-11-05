@@ -1,0 +1,64 @@
+# Every path of this template and its ownership (docs/template-releases.md).
+# update-from-template reads this file at the template release it updates to:
+#   platform       copied over the product's file on every update; the product never edits it
+#   shared         the template's change is 3-way merged into the product's file; conflicts are listed
+#   product        never touched; the template's change is shown as a suggestion
+#   template-only  never copied to a product repository
+# The first rule whose pattern matches a path wins. `*` matches within one folder, `**` across folders.
+# `pnpm test` fails when a tracked file matches no rule (scripts/check-template-manifest.mjs).
+template: template-website
+
+# The template's skills, in .agents/skills/<name>/. Any other folder there is a project skill,
+# which an update never reads, changes or deletes. Each skill's front matter repeats its ownership.
+skills:
+  release: platform
+  update-from-template: platform
+  release-template: template-only
+
+paths:
+  # Maintaining the template itself
+  - { path: template-manifest.yaml, ownership: template-only }
+  - { path: .agents/skills/release-template/**, ownership: template-only }
+  - { path: docs/template-releases.md, ownership: template-only }
+  - { path: docs/upgrading/template-*.md, ownership: template-only }
+
+  # The platform's part: the same in every product repository
+  - { path: .github/workflows/*, ownership: platform }
+  - { path: .agents/skills/release/**, ownership: platform }
+  - { path: .agents/skills/update-from-template/**, ownership: platform }
+  - { path: docs/upgrading/README.md, ownership: platform }
+  - { path: CLAUDE.md, ownership: platform }
+  - { path: platform.schema.json, ownership: platform }
+  - { path: renovate.json, ownership: platform }
+  - { path: docker-entrypoint.d/**, ownership: platform }
+  - { path: scripts/check-template-manifest.mjs, ownership: platform }
+  - { path: scripts/check-template-manifest.test.mjs, ownership: platform }
+
+  # The product's own
+  - { path: README.md, ownership: product }
+  - { path: platform.yaml, ownership: product }
+  - { path: .github/CODEOWNERS, ownership: product }
+  - { path: .trivyignore, ownership: product }
+  - { path: pnpm-lock.yaml, ownership: product }
+  - { path: src/**, ownership: product }
+  - { path: public/**, ownership: product }
+  - { path: docs/brief.md, ownership: product }
+  - { path: docs/co2/**, ownership: product }
+
+  # Shared: the template's starting point, which the product may adapt
+  - { path: AGENTS.md, ownership: shared }
+  - { path: .agents/rules/**, ownership: shared }
+  - { path: .github/pull_request_template.md, ownership: shared }
+  - { path: docs/**, ownership: shared }
+  - { path: scripts/**, ownership: shared }
+  - { path: nginx/**, ownership: shared }
+  - { path: Dockerfile, ownership: shared }
+  - { path: .dockerignore, ownership: shared }
+  - { path: .editorconfig, ownership: shared }
+  - { path: .gitattributes, ownership: shared }
+  - { path: .gitignore, ownership: shared }
+  - { path: astro.config.mjs, ownership: shared }
+  - { path: eslint.config.js, ownership: shared }
+  - { path: tsconfig.json, ownership: shared }
+  - { path: package.json, ownership: shared }
+  - { path: page-weight.config.json, ownership: shared }

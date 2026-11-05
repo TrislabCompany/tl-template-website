@@ -20,7 +20,7 @@ Use it for a site that shows content, such as pages, articles, a company or a do
 
 You don't create a repository from this template yourself. The platform creates it when your product is onboarded: the onboarding PR in `tl-cloud-infrastructure` adds the repository to `catalog/repos.yaml`, named `<customer>-website-<product>` (for example `trislab-website-corporate-site`), and the pipeline creates it from this template with its team, rules and `dev` Environment. Don't use GitHub's "Use this template" button.
 
-The new repository gets a copy of these files and never syncs with the template again. From then on the code, this README and `docs/` are your team's.
+The new repository gets a copy of these files, and records the template release it came from in `.template-version`. Later template releases reach it only as `update-from-template` PRs, which change the platform's files and merge the template's changes into the shared ones, and never touch your code, content or this README ([docs/upgrading/README.md](docs/upgrading/README.md)). From then on the code, this README and `docs/` are your team's.
 
 ## Features included
 
@@ -66,7 +66,9 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 | `docs/co2/` | The yearly CO₂ notes, one file per year |
 | `Dockerfile`, `nginx/`, `docker-entrypoint.d/` | The image: the build, nginx's configuration, and the script that writes `/config.json` |
 | `platform.yaml` | The image and the sizing of the app, within the stamp's caps |
-| `.github/` | The `ci` workflow, the PR template and the code owners |
+| `.github/` | The `ci`, `deploy` and `release` workflows, the PR template and the code owners |
+| `AGENTS.md`, `CLAUDE.md`, `.agents/skills/` | The guide for coding agents and their skills: `release` and `update-from-template` |
+| `template-manifest.yaml` | The ownership of every path, for template updates. Only in the template |
 | `docs/` | The detail behind this README |
 
 ## First steps
@@ -74,7 +76,7 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 1. **Set the site's facts:** languages, company, contact and legal pages in `src/site.config.ts` ([site-settings.md](docs/site-settings.md)).
 2. **Run it locally:** `pnpm install`, then `pnpm dev`, and open <http://localhost:4321>. Run `pnpm test` before you push. [getting-started.md](docs/getting-started.md) also runs it as the image.
 3. **Open your first PR:** change a page in `src/pages/[...lang]/`, push a branch and open a PR. `ci / ci` must pass and a code owner must approve.
-4. **Deploy, release and promote:** a merge to `main` deploys to `dev`, a tag `vX.Y.Z` releases to the `release` tier, and a promotion moves a release to production. `deploy.yml` and `release.yml` do the first two, and the platform adds `promote.yml` before the first production Environment; [deployment.md](docs/deployment.md) explains how they work, and [its section 6](docs/deployment.md#6-steps-for-developers) lists your steps. The `release` skill runs them.
+4. **Deploy, release and promote:** a merge to `main` deploys to `dev`, a tag `vX.Y.Z` releases to the `release` tier, and a promotion moves a release to production. `deploy.yml` and `release.yml` do the first two, and the platform adds `promote.yml` before the first production Environment; [deployment.md](docs/deployment.md) explains how they work, and [its steps for developers](docs/deployment.md#steps-for-developers) lists your steps. The `release` skill runs them.
 
 ## More
 
@@ -82,4 +84,9 @@ Both base images are pinned by digest in `Dockerfile`. Renovate will keep the ve
 - [Architecture](docs/architecture.md): the image, the app, nginx and the request path.
 - [Site settings](docs/site-settings.md): languages, contact and legal pages, structured data, `security.txt`, the page-weight budget and the yearly CO₂ estimate.
 - [Configuration](docs/configuration.md): the settings, `/config.json`, and how to add a `PUBLIC_` setting.
-- [Deployment](docs/deployment.md): Environments, deploy, release and promote, `platform.yaml` and the caps, and how to ask for more. Section 6: the steps for developers.
+- [Deployment](docs/deployment.md): Environments, deploy, release and promote, `platform.yaml` and the caps, and how to ask for more, then the steps for developers.
+- [Updates from the template](docs/upgrading/README.md): `.template-version`, who owns which file, and update PRs.
+
+## Maintaining the template
+
+The template is released as `template-website/vX.Y.Z`, never `v*`. Every path has an ownership in `template-manifest.yaml`, which `pnpm test` checks. The `release-template` skill prepares a release; [docs/template-releases.md](docs/template-releases.md) has the rules and the list of releases. Both stay in the template and never reach a product repository.
