@@ -26,6 +26,8 @@ When you add a file, give it a rule first. Choose by who changes it after the re
 
 Every change is a PR to `main`, and `ci / ci` must pass. `platform` skills (`release`, `update-from-template`) and `docs/upgrading/README.md` have the same text in all three templates, apart from `metadata.owner`: change them in all three together.
 
+How developers deploy and release is written in two places that must agree: `docs/deployment.md` ("Release with the agent" and "Steps for developers") and the `release` skill, which links to that page's headings. Change them together, and keep the headings the skill links to: changing one is breaking. A product repository gets the change only through a template release and its `update-from-template` PR, the canary first ([Releasing](#releasing)).
+
 ## Releasing
 
 The `release-template` skill does these steps:
@@ -41,3 +43,4 @@ The `release-template` skill does these steps:
 | Version | Breaking | Requires | Notes |
 | --- | --- | --- | --- |
 | `v0.1.0` | yes (first release) | `app-workflows >= v0.2.0` | [template-v0.1.0.md](upgrading/template-v0.1.0.md) |
+| `v0.1.1` | no | nothing new | [template-v0.1.1.md](upgrading/template-v0.1.1.md) |
