@@ -45,3 +45,4 @@ The `release-template` skill does these steps:
 | --- | --- | --- | --- |
 | `v0.1.0` | yes (first release) | `app-workflows >= v0.2.0` | [template-v0.1.0.md](upgrading/template-v0.1.0.md) |
 | `v0.1.1` | no | nothing new | [template-v0.1.1.md](upgrading/template-v0.1.1.md) |
+| `v0.1.2` | no | nothing new | [template-v0.1.2.md](upgrading/template-v0.1.2.md) |
