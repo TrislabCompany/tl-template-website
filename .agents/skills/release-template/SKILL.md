@@ -1,6 +1,6 @@
 ---
 name: release-template
-description: Prepare a release of this template — choose the next template-<type>/vX.Y.Z version from the merged changes and the breaking rules, write the release notes docs/upgrading/template-vX.Y.Z.md (changes by ownership, upgrade steps, requires, breaking) and their row in docs/template-releases.md, run the checks and open the release PR; after the merge, check the commit and hand the tag command to an organization owner, then point to the canary's update. Only in the template repository itself. Use when a maintainer asks to release, version or tag the template.
+description: Prepare a release of this template — choose the next template-<type>/vX.Y.Z version from the merged changes and the breaking rules, write the release notes docs/upgrading/template-vX.Y.Z.md (changes by ownership, upgrade steps, requires, breaking) and their row in docs/template-releases.md, run the checks and open the release PR; after the merge, the template-release workflow tags the merge commit and publishes the GitHub Release; check it, start it if it did not run, then point to the canary's update. Only in the template repository itself. Use when a maintainer asks to release, version or tag the template.
 metadata:
   owner: template-website
   ownership: template-only
@@ -16,7 +16,7 @@ Prepares one release of this template. Only in the template repository: this ski
 | --- | --- |
 | `release-template status` | The last `template-<type>/v*` tag and the merged changes since then, by ownership |
 | `release-template prepare` | Proposes the version and opens the release PR |
-| `release-template tag` | After the merge: checks the commit and prints the tag command for an organization owner |
+| `release-template tag` | After the merge: checks that the workflow tagged and released it, or starts the workflow |
 
 ## prepare
 
@@ -36,22 +36,18 @@ Prepares one release of this template. Only in the template repository: this ski
    - **Upgrade steps:** what `update-from-template` or the team does by hand, in order, or "none".
 6. **Add the release** to the table in [docs/template-releases.md](../../../docs/template-releases.md#releases).
 7. **Run the checks:** `pnpm test`, which includes the manifest check. Fix every failure.
-8. **Open the PR** titled `<template> vX.Y.Z`, with the notes as its body.
+8. **Open the PR** titled `<template> vX.Y.Z`, with the notes as its body. Nothing else is done by hand: once it is merged and `ci` passes on the merge commit, the `template-release` workflow ([.github/workflows/template-release.yml](../../../.github/workflows/template-release.yml)) tags it and publishes the GitHub Release.
 
 ## tag
 
-1. The release PR is merged. Take its merge commit on `origin/main` (full SHA), and check its `ci / ci` passed and the tag does not exist.
-2. Print the commands for an organization owner, an annotated tag pushed alone:
+The `template-release` workflow does the tagging. It runs when `ci` passes on a push to `main` that adds `docs/upgrading/template-vX.Y.Z.md`. It checks the row in [docs/template-releases.md](../../../docs/template-releases.md#releases), that the version is higher than every `<template>/v*` tag, and that the tag is new. Then it pushes the annotated tag `<template>/vX.Y.Z` alone and creates the GitHub Release with the notes as its body.
 
-   ```bash
-   git tag -a <template>/vX.Y.Z <sha> -m "<template> vX.Y.Z"
-   git push origin refs/tags/<template>/vX.Y.Z
-   ```
-
-   Never a `v*` tag, which would start `release.yml` in a product repository; never `--tags` or `--follow-tags`.
-3. Once tagged, the canary takes it first: suggest `update-from-template` in `trislab-website-corporate-site` for the website template, or the first `active` repository of this template in `catalog/repos.yaml` of `tl-cloud-infrastructure` for the others. The other repositories follow once the canary's update is merged and deployed.
+1. The release PR is merged. Take its merge commit on `origin/main` (full SHA) and its run: `gh run list --workflow template-release.yml --limit 5`.
+2. **The run succeeded:** check that the tag points to the commit (`git ls-remote origin 'refs/tags/<template>/vX.Y.Z^{}'`) and that the Release exists (`gh release view <template>/vX.Y.Z`).
+3. **No run, or it failed:** read the failure (`gh run view <id> --log-failed`) and fix the cause. A ruleset refusal means GitHub Actions is not a bypass actor of `release-tag-creation`: tell an admin, since that is a one-time setup. Then start it: `gh workflow run template-release.yml -f version=vX.Y.Z`, watch it with `gh run watch`, and check again as in 2.
+4. Once tagged, the canary takes it first: suggest `update-from-template` in `trislab-website-corporate-site` for the website template, or the first `active` repository of this template in `catalog/repos.yaml` of `tl-cloud-infrastructure` for the others. The other repositories follow once the canary's update is merged and deployed.
 
 ## Rules
 
-- Never create, move or delete a tag yourself. A tag is never moved or deleted; a fix is the next version.
+- Never create, move or delete a tag by hand: only the `template-release` workflow creates one. A tag is never moved or deleted; a fix is the next version. Never a `v*` tag, which would start `release.yml` in a product repository.
 - Never merge or approve a PR.

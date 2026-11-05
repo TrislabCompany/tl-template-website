@@ -1,0 +1,136 @@
+name: template-release
+
+# Publishes a release of this template (docs/template-releases.md). When ci has
+# passed on a push to main whose commit added docs/upgrading/template-vX.Y.Z.md
+# (the merged release PR), it creates the annotated tag <template>/vX.Y.Z on that
+# commit, pushes that tag alone, and creates the GitHub Release with the notes.
+# Run it by hand with a version to publish a release that is already merged.
+# Template-only: never copied to a product repository. Nobody tags by hand.
+# Needs GitHub Actions as a bypass actor of the tag ruleset release-tag-creation.
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The release to publish, e.g. v0.1.2 (its notes must be on main)
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: template-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Find the release
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = workflow_run ]; then
+            sha="$RUN_SHA"
+            notes=$(git diff --diff-filter=A --name-only "$sha^" "$sha" -- 'docs/upgrading/template-v*.md')
+            if [ -z "$notes" ]; then
+              echo "No release notes added by $sha: nothing to publish." >> "$GITHUB_STEP_SUMMARY"
+              echo "release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$(echo "$notes" | wc -l)" -ne 1 ]; then
+              echo "::error::$sha adds more than one release notes file: $notes"
+              exit 1
+            fi
+            version=$(basename "$notes" .md); version=${version#template-}
+          else
+            version="$INPUT_VERSION"
+            notes="docs/upgrading/template-$version.md"
+            [ -f "$notes" ] || { echo "::error::$notes is not on main"; exit 1; }
+            sha=$(git log --first-parent --diff-filter=A --format=%H -1 main -- "$notes")
+            ci=$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/check-runs?check_name=ci%20%2F%20ci" \
+              --jq '[.check_runs[] | select(.conclusion == "success")] | length')
+            [ "$ci" -gt 0 ] || { echo "::error::ci / ci has not passed on $sha"; exit 1; }
+          fi
+
+          [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::$version is not vX.Y.Z"; exit 1; }
+          template=$(sed -n 's/^template: *//p' template-manifest.yaml)
+          [ -n "$template" ] || { echo "::error::template-manifest.yaml has no template"; exit 1; }
+          tag="$template/$version"
+
+          git show "$sha:docs/template-releases.md" | grep -qF "| \`$version\` |" \
+            || { echo "::error::docs/template-releases.md has no row for $version"; exit 1; }
+
+          echo "release=true" >> "$GITHUB_OUTPUT"
+          { echo "sha=$sha"; echo "version=$version"; echo "template=$template"; echo "tag=$tag"; echo "notes=$notes"; } >> "$GITHUB_OUTPUT"
+
+      - name: Tag
+        if: steps.find.outputs.release == 'true'
+        env:
+          SHA: ${{ steps.find.outputs.sha }}
+          VERSION: ${{ steps.find.outputs.version }}
+          TEMPLATE: ${{ steps.find.outputs.template }}
+          TAG: ${{ steps.find.outputs.tag }}
+        run: |
+          set -euo pipefail
+          remote=$(git ls-remote origin "refs/tags/$TAG" "refs/tags/$TAG^{}" | tail -1 | cut -f1)
+          if [ -n "$remote" ]; then
+            [ "$remote" = "$SHA" ] || { echo "::error::$TAG exists on $remote, not $SHA. A tag is never moved; release the next version."; exit 1; }
+            echo "$TAG already points to $SHA."
+            exit 0
+          fi
+          highest=$(git tag -l "$TEMPLATE/v*" | sed "s|^$TEMPLATE/||" | sort -V | tail -1)
+          if [ -n "$highest" ] && [ "$(printf '%s\n%s\n' "$highest" "$VERSION" | sort -V | tail -1)" != "$VERSION" ]; then
+            echo "::error::$VERSION is not higher than $highest"
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$TAG" "$SHA" -m "$TEMPLATE $VERSION"
+          git push origin "refs/tags/$TAG" \
+            || { echo "::error::Pushing $TAG was refused. Is GitHub Actions a bypass actor of the tag ruleset release-tag-creation?"; exit 1; }
+
+      - name: GitHub Release
+        if: steps.find.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.find.outputs.version }}
+          TEMPLATE: ${{ steps.find.outputs.template }}
+          TAG: ${{ steps.find.outputs.tag }}
+          NOTES: ${{ steps.find.outputs.notes }}
+          SHA: ${{ steps.find.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "The release $TAG exists."
+          else
+            git show "$SHA:$NOTES" > "$RUNNER_TEMP/notes.md"
+            gh release create "$TAG" --verify-tag --latest=false \
+              --title "$TEMPLATE $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+          fi
+          url=$(gh release view "$TAG" --json url --jq .url)
+          {
+            echo "Published [$TAG]($url) on \`$SHA\`."
+            echo
+            echo "Next: the canary takes it first with \`update-from-template\` (docs/template-releases.md#releasing)."
+          } >> "$GITHUB_STEP_SUMMARY"
