@@ -24,6 +24,7 @@ paths:
   - { path: .claude/skills/release-template/**, ownership: template-only }
   - { path: docs/template-releases.md, ownership: template-only }
   - { path: docs/upgrading/template-*.md, ownership: template-only }
+  - { path: .github/workflows/template-release.yml, ownership: template-only }
 
   # The platform's part: the same in every product repository
   - { path: .github/workflows/*, ownership: platform }
