@@ -8,7 +8,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { parse } from 'yaml';
 
-export const OWNERSHIPS = ['platform', 'shared', 'product', 'template-only'];
+export const OWNERSHIPS = ['platform', 'shared', 'product', 'template-only', 'sample'];
 export const BLOCK_START = '<!-- template-skills:start -->';
 export const BLOCK_END = '<!-- template-skills:end -->';
 
@@ -83,7 +83,7 @@ export function checkManifest({ manifest, files, skillFiles, pointerFiles = {}, 
     if (!(name in skills)) errors.push(`.agents/skills/${name} is not listed under skills in template-manifest.yaml`);
   }
   for (const [name, ownership] of Object.entries(skills)) {
-    if (!OWNERSHIPS.includes(ownership) || ownership === 'product') {
+    if (!OWNERSHIPS.includes(ownership) || ownership === 'product' || ownership === 'sample') {
       errors.push(`skill ${name}: ownership must be platform, shared or template-only, not ${ownership}`);
       continue;
     }

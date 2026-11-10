@@ -1,0 +1,11 @@
+const {{id_var}} = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/{{id}}" }),
+  schema: z.object({
+    title: z.string(),
+    summary: z.string(),
+    /** Position in lists, lowest first. */
+    order: z.number().int(),
+    tags: z.array(z.string()).default([]),
+  }),
+});
+

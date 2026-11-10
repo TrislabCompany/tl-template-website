@@ -24,7 +24,7 @@ Every page has a canonical link, an `hreflang` link for each language it exists 
 To add a language:
 
 1. Add its code to `languages` in `src/site.config.ts`. TypeScript then asks for every text in that language (`description`, contact topic labels and so on).
-2. Add the interface strings: `src/i18n/ui/` already has Croatian (`hr`), Italian (`it`) and Serbian in the Latin script (`sr`), registered in `ui` in `src/i18n/index.ts`; they hold only interface strings, never site copy. For another language, copy `src/i18n/ui/en.ts` to `src/i18n/ui/<code>.ts`, translate the strings and register it there. A new code may also need a line in `territory` in `src/i18n/index.ts`, for the Open Graph locale.
+2. Add the interface strings: the template has packs for Croatian (`hr`), Italian (`it`), Serbian in the Latin script (`sr`) and German (`de`) in `src/i18n/ui/`, registered in `ui` in `src/i18n/index.ts`; they hold only interface strings, never site copy. A site made with `pnpm init-site` keeps only the packs of its own languages (and `en`, which defines the strings' type): copy a missing one from `tl-template-website`. For another language, copy `src/i18n/ui/en.ts` to `src/i18n/ui/<code>.ts`, translate the strings and register it there. A new code may also need a line in `territory` in `src/i18n/index.ts`, for the Open Graph locale.
 3. Add the content in `src/content/<collection>/<code>/`.
 
 The site doesn't detect the visitor's language; the visitor chooses it.
@@ -48,7 +48,7 @@ Content is kept per language: `src/content/services/en/first-service.md` and `sr
 
 ## 2. Lists of items
 
-A list of items, such as services, products, news or cases, is a folder of Markdown files, one per item and language, and an entry in `collections` of `src/site.config.ts`. The template has one sample list, `services`. Each list gets a list page, `/<lang>/<id>`, one page per item, `/<lang>/<id>/<name>`, a section on the home page (`home`), a link in the menu (`nav`) and a place in the sitemap page, all from the same entry.
+A list of items, such as services, products, news or cases, is a folder of Markdown files, one per item and language, and an entry in `collections` of `src/site.config.ts`. The template has one sample list, `services`; `pnpm init-site` replaces it with the lists of the site's `site.yaml`. Each list gets a list page, `/<lang>/<id>`, one page per item, `/<lang>/<id>/<name>`, a section on the home page (`home`), a link in the menu (`nav`) and a place in the sitemap page, all from the same entry.
 
 To add a list:
 

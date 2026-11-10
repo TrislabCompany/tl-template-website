@@ -92,3 +92,12 @@ test('every skill needs a pointer in .claude/skills with the same front matter',
   input.manifest = { ...manifest, paths: manifest.paths.filter((r) => r.path !== '.claude/skills/release/**') };
   assert.match(checkManifest(input).join('\n'), /its pointer's path is undefined/);
 });
+
+test('the class sample is allowed for a path but not for a skill', () => {
+  const input = valid();
+  input.manifest = { ...manifest, paths: [{ path: 'src/content/services/**', ownership: 'sample' }, ...manifest.paths] };
+  input.files.push('src/content/services/en/a.md');
+  assert.deepEqual(checkManifest(input), []);
+  input.manifest = { ...input.manifest, skills: { ...manifest.skills, extra: 'sample' } };
+  assert.match(checkManifest(input).join('\n'), /skill extra: ownership must be platform, shared or template-only, not sample/);
+});

@@ -2,6 +2,46 @@
 
 This guide runs the site on your machine, first with the Astro dev server and then the way Cloudflare Pages serves it, and runs the tests that `ci / ci` runs on every PR.
 
+## A new site
+
+You don't create a site's repository yourself, and you don't customise the copy of the template by hand. Two steps make a new site:
+
+1. **The platform creates the repository.** The onboarding PR in `tl-cloud-infrastructure` makes the pipeline copy the template's `main` into a new repository (`<tenant>-website-<product>`), with its team, rules, Cloudflare Pages project and the Environments `dev`, `staging` and `production`. The copy is still the template's sample site. Its deploy workflows skip while the repository has no `.template-version`, so nothing of the sample is deployed.
+2. **The init PR turns the copy into the site.** Its branch is `init-site`. It is made by running the init script with a `site.yaml`:
+
+   ```sh
+   pnpm install
+   cp <the site's site.yaml> site.yaml
+   pnpm init-site          # --dry-run lists what it would do and changes nothing
+   pnpm test
+   ```
+
+   `site.yaml` holds the site's published facts and is written from the site's intake (`tl-product-ideas`, `handoff-apply`). `site.schema.json` describes it; `scripts/init/sample-site.yaml` is an example. The script checks it first and changes nothing when it is wrong. Then it:
+
+   - deletes every path of the manifest classes `template-only` and `sample` (`template-manifest.yaml`, which only the template has): the template's release skill and notes, the sample list `services`, and the script itself with its templates, `site.schema.json` and `site.yaml`;
+   - writes `src/site.config.ts`, `src/content.config.ts` (one collection for each list in `collections`), the brand values of `src/styles/tokens.css`, `README.md`, the header of `AGENTS.md`, `.github/CODEOWNERS`, the package name, the pages of `lighthouserc.json` and `.template-version`;
+   - drops the language packs (`src/i18n/ui/`) and the legal text drafts of the languages the site doesn't have (`en` stays: it defines the strings' type), and gives each language without a draft a copy of the default language's;
+   - sets the `security.txt` expiry just under a year ahead.
+
+   The result builds and passes `pnpm test`. Commit it, open the PR and, once it is merged, the first deploy to `dev` runs.
+
+| `site.yaml` field | Meaning | Required |
+| --- | --- | --- |
+| `name`, `domain`, `repo`, `github_team` | The site's name, its production domain, `<owner>/<repository>` and the code owners team | yes |
+| `template.version`, `template.commit` | The template release the copy comes from, for `.template-version` | yes |
+| `languages`, `description` | The languages (default first; `sl`, `en`, `hr`, `sr`, `it`, `de`) and the page description in each | yes |
+| `company` | Name, legal name, address, registration and VAT numbers, imprint notes, profiles: published data only | name, legal name, address |
+| `contact` | Role mailboxes by topic, the security mailbox, a map link: never a person's name, address or phone number | topics, security mailbox |
+| `legal_pages`, `structured_data` | Which legal pages exist; `Organization`, `LocalBusiness` or `none` | no |
+| `collections` | The lists of items (at least one), with titles and lead sentences per language | yes |
+| `theme` | The brand colours and the address bar colour; the sample's neutral colours stay where none is given | no |
+
+A site has no budget, prices or personal data in `site.yaml`: the schema has no field for them. The script and `site.yaml` exist only in the template, so a product repository never gets them from `update-from-template`.
+
+An empty list builds with a warning (`The collection "services" does not exist or is empty`) until its first item is added in `src/content/<id>/<language>/`.
+
+The rest of this page is for working on a site that exists.
+
 ## 1. What you need
 
 | Tool | Version | Check |

@@ -4,7 +4,7 @@ For the template's maintainers. This page is `template-only`: product repositori
 
 ## Ownership of every path
 
-`template-manifest.yaml` gives every path of the template one ownership: `platform`, `shared`, `product` or `template-only`. The first rule whose pattern matches a path wins; `*` matches within one folder, `**` across folders. Its `skills` list names the template's skills and their ownership, and each skill's front matter repeats it (`metadata.owner: template-website`, `metadata.ownership`).
+`template-manifest.yaml` gives every path of the template one ownership: `platform`, `shared`, `product`, `template-only` or `sample`. The first rule whose pattern matches a path wins; `*` matches within one folder, `**` across folders. Its `skills` list names the template's skills and their ownership, and each skill's front matter repeats it (`metadata.owner: template-website`, `metadata.ownership`).
 
 `pnpm test` runs `scripts/check-template-manifest.mjs`, so `ci / ci` fails when:
 
@@ -21,7 +21,21 @@ When you add a file, give it a rule first. Choose by who changes it after the re
 - `platform`: the platform team, and the product must take every change as it is;
 - `shared`: a starting point the product team may adapt;
 - `product`: the product's own from the first day;
-- `template-only`: about maintaining the template.
+- `template-only`: about maintaining the template, or only needed to make a repository from it (the init script and its input).
+- `sample`: the template's sample content, which makes it a working site. It is shown in the template, `pnpm init-site` deletes it from every new site, and an update never copies it to a product. Only paths can be `sample`, never skills. Today: `src/content/services/**`. The sample pages and texts that every site needs, such as the about page and the legal text drafts, stay `product`.
+
+The rules of `template-only` and `sample` come first in `template-manifest.yaml`, before the broad rules such as `scripts/**` and `src/**`, because the first matching rule wins. `pnpm init-site` finds what to delete by these classes and has no list of its own.
+
+## The init script
+
+`pnpm init-site` (`scripts/init-site.mjs`, input `site.yaml`, schema `site.schema.json`, templates in `scripts/init/`) turns a new copy of the template into a site: [getting-started.md](getting-started.md#a-new-site) says what it does. A change to the template must keep it working:
+
+- A file the script rewrites (`src/site.config.ts`, `src/content.config.ts`, `src/styles/tokens.css`, `src/i18n/index.ts`, `AGENTS.md`, `lighthouserc.json`, `package.json`) changes shape: change the script and its templates with it.
+- A new language pack: add it to the `language` list of `site.schema.json` and to `LANGUAGE_NAMES` in the script.
+- A new field of `src/lib/site-settings.ts` that every site needs: add it to `site.schema.json`, `settingsOf` and `scripts/init/sample-site.yaml`.
+- A new path that only makes sense in the template, or sample content: give it the class `template-only` or `sample` before the broad rules.
+
+The workflow `template-init.yml` runs the script on a copy with each `scripts/init/sample-site*.yaml` and then `pnpm test` and `pnpm test:a11y`, on every PR and every push to `main`. The sample's `template.version` is only an example. When `site.yaml` changes shape, the generator in `tl-product-ideas` changes with it: say so in the release notes.
 
 ## Changing the template
 
@@ -48,3 +62,4 @@ The `release-template` skill does these steps:
 | `v0.1.2` | no | nothing new | [template-v0.1.2.md](upgrading/template-v0.1.2.md) |
 | `v0.2.0` | yes (Container Apps to Cloudflare Pages) | the Pages project and the GitHub Environments `dev`, `staging`, `production` with their variables and secret | [template-v0.2.0.md](upgrading/template-v0.2.0.md) |
 | `v0.3.0` | yes (`ROBOTS_INDEX` no longer read, `--azure-*` options of `co2-estimate` removed) | nothing new beyond v0.2.0 | [template-v0.3.0.md](upgrading/template-v0.3.0.md) |
+| `v0.4.0` | no | nothing new | [template-v0.4.0.md](upgrading/template-v0.4.0.md) |

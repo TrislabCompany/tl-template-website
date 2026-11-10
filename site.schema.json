@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "site.schema.json",
+  "title": "site.yaml",
+  "description": "The input of `pnpm init-site` (scripts/init-site.mjs): everything the init script needs to turn a copy of tl-template-website into one site's repository. Published facts only: no budget, prices, offers or personal data. Template-only: init-site deletes this file with site.yaml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "domain", "repo", "github_team", "template", "languages", "description", "company", "contact", "collections"],
+  "properties": {
+    "name": {
+      "description": "The site's name, shown in the header and in every page title (site.config.ts name).",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "domain": {
+      "description": "The production domain, lower case, without `www.` and without a scheme. The site's address is https://<domain> (site.config.ts url).",
+      "type": "string",
+      "pattern": "^(?!www\\.)([a-z0-9]([a-z0-9-]*[a-z0-9])?\\.)+[a-z]{2,}$"
+    },
+    "repo": {
+      "description": "The GitHub repository, <owner>/<name>, for example TrislabCompany/trislab-website-dragonja. The name becomes the package name; the owner is the organisation of the code owners team.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*/[a-z0-9][a-z0-9-]*$"
+    },
+    "github_team": {
+      "description": "The team (without the organisation) that owns the repository, for .github/CODEOWNERS: @<owner>/<github_team>. The devops team is added for the platform's files.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "template": {
+      "description": "The template release this repository is made from. init-site writes it to .template-version, where update-from-template reads it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "commit"],
+      "properties": {
+        "version": { "description": "The release tag without the `template-website/` prefix, for example v0.4.0.", "type": "string", "pattern": "^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" },
+        "commit": { "description": "The full SHA of the release tag's commit.", "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "languages": {
+      "description": "The site's languages. The first is the default language, which `/` leads to. Only languages the template has interface strings for (src/i18n/ui/): sl, en, hr, sr (Latin script), it, de. The other packs are deleted.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/language" }
+    },
+    "description": {
+      "description": "The default description of a page, one sentence or two, in every language of `languages`.",
+      "$ref": "#/definitions/localized"
+    },
+    "company": {
+      "description": "The company the site publishes in its imprint, contact page and structured data. Published data only.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "legal_name", "address"],
+      "properties": {
+        "name": { "description": "The name people know.", "type": "string", "minLength": 1 },
+        "legal_name": { "description": "The registered name, for example `Example d.o.o.`.", "type": "string", "minLength": 1 },
+        "address": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["street", "postal_code", "city", "country"],
+          "properties": {
+            "street": { "type": "string", "minLength": 1 },
+            "postal_code": { "type": "string", "minLength": 1 },
+            "city": { "type": "string", "minLength": 1 },
+            "country": { "description": "ISO 3166-1 alpha-2 code, for example SI.", "type": "string", "pattern": "^[A-Z]{2}$" }
+          }
+        },
+        "registration_number": { "description": "The company registration number, as published in the imprint.", "type": "string", "minLength": 1 },
+        "vat_id": { "description": "The VAT identification number, as published in the imprint.", "type": "string", "minLength": 1 },
+        "imprint_notes": {
+          "description": "Other lines the law asks for in the imprint (court register, share capital...). Each line is written in every language.",
+          "type": "array",
+          "items": { "$ref": "#/definitions/localized" }
+        },
+        "profiles": {
+          "description": "Profiles of the company elsewhere (LinkedIn, GitHub...), as absolute https URLs.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^https://[^\\s]+$" }
+        }
+      }
+    },
+    "contact": {
+      "description": "How visitors reach the company. Role mailboxes only (info@, sales@): never a person's name, e-mail address or phone number.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topics", "security_email"],
+      "properties": {
+        "topics": {
+          "description": "E-mail by topic, shown on the contact page and the imprint.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["email", "label"],
+            "properties": {
+              "email": { "description": "A role mailbox.", "$ref": "#/definitions/email" },
+              "label": { "description": "What this mailbox is for, in every language.", "$ref": "#/definitions/localized" }
+            }
+          }
+        },
+        "security_email": { "description": "The role mailbox for security reports, published in /.well-known/security.txt. init-site sets the expiry date a year (less a month) ahead.", "$ref": "#/definitions/email" },
+        "map_url": { "description": "A plain https link to a map. Nothing is embedded.", "type": "string", "pattern": "^https://[^\\s]+$" },
+        "google_business_url": { "description": "The company's Google Business profile, an https URL.", "type": "string", "pattern": "^https://[^\\s]+$" }
+      }
+    },
+    "legal_pages": {
+      "description": "Which legal pages the site has. Each defaults to true. The texts are drafts in src/content/legal/<language>/ that a lawyer must review.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "imprint": { "type": "boolean" },
+        "privacy": { "type": "boolean" },
+        "accessibility": { "type": "boolean" },
+        "sustainability": { "type": "boolean" }
+      }
+    },
+    "structured_data": {
+      "description": "The JSON-LD on every page. Default Organization.",
+      "enum": ["Organization", "LocalBusiness", "none"]
+    },
+    "collections": {
+      "description": "The lists of items kept as Markdown (src/content/<id>/<language>/), at least one: the pages and types of the template assume a list. Each gets a list page, an item page, a home section and a menu link as `nav` and `home` say. init-site writes the content collection for each id and no items.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "lead"],
+        "properties": {
+          "id": { "description": "The folder in src/content/ and the first part of the address, kebab-case, for example `services`. Not a page the template already has.", "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "title": { "description": "The list's heading, menu entry and home section heading, in every language.", "$ref": "#/definitions/localized" },
+          "lead": { "description": "One sentence under the heading, in every language.", "$ref": "#/definitions/localized" },
+          "nav": { "description": "A link in the main menu. Default true.", "type": "boolean" },
+          "home": { "description": "A section with the items on the home page. Default true.", "type": "boolean" }
+        }
+      }
+    },
+    "theme": {
+      "description": "The brand. Every value is optional; the template's neutral sample is kept for what is missing. init-site checks the contrast the way tokens.css asks.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "theme_color": { "description": "The colour of the address bar on a phone, #rrggbb. Default: the background.", "$ref": "#/definitions/color" },
+        "background": { "$ref": "#/definitions/color" },
+        "surface": { "$ref": "#/definitions/color" },
+        "surface_strong": { "$ref": "#/definitions/color" },
+        "border": { "$ref": "#/definitions/color" },
+        "text": { "$ref": "#/definitions/color" },
+        "muted": { "description": "Secondary text: 4.5:1 on background and surface.", "$ref": "#/definitions/color" },
+        "accent": { "$ref": "#/definitions/color" },
+        "accent_text": { "description": "The accent as text: 4.5:1 on background and surface.", "$ref": "#/definitions/color" },
+        "accent_contrast": { "description": "Text on a button in the accent colour: 4.5:1 on accent.", "$ref": "#/definitions/color" }
+      }
+    }
+  },
+  "definitions": {
+    "language": { "enum": ["sl", "en", "hr", "sr", "it", "de"] },
+    "localized": {
+      "description": "A text per language. It has exactly the languages of `languages`; init-site checks that.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/definitions/language" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "email": { "type": "string", "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" },
+    "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+  }
+}

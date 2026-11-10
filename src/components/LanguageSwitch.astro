@@ -20,11 +20,11 @@ const { lang, path, available = languages } = Astro.props;
       {available.map((other) =>
         other === lang ? (
           <span aria-current="true" lang={other}>
-            {other.toUpperCase()}
+            {String(other).toUpperCase()}
           </span>
         ) : (
           <a href={localizedPath(other, path)} hreflang={other} lang={other}>
-            {other.toUpperCase()}
+            {String(other).toUpperCase()}
           </a>
         ),
       )}

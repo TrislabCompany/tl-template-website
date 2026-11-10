@@ -1,0 +1,69 @@
+# A sample site.yaml, valid against site.schema.json. The CI job "template-init"
+# runs `pnpm init-site` with it on a copy of the template and then the tests
+# (docs/getting-started.md#a-new-site). The values are invented; real input is
+# written from a site's intake and holds published facts only.
+name: Example Site
+domain: example.com
+repo: ExampleOrg/example-website-corporate-site
+github_team: example-corporate-site
+
+# Written to .template-version. In CI the version is whatever is being tested.
+template:
+  version: v0.4.0
+  commit: "0000000000000000000000000000000000000000"
+
+# The first language is the default. Only languages with an interface pack: sl, en, hr, sr, it, de.
+languages: [sl, en, de]
+
+description:
+  sl: Vzorčno spletno mesto, ustvarjeno z inicializacijskim skriptom predloge.
+  en: A sample website made with the template's init script.
+  de: Eine Beispiel-Website, erstellt mit dem Init-Skript der Vorlage.
+
+company:
+  name: Example
+  legal_name: Example d.o.o.
+  address:
+    street: Primer ulica 1
+    postal_code: "1000"
+    city: Ljubljana
+    country: SI
+  registration_number: "0000000000"
+  vat_id: SI00000000
+  profiles:
+    - https://www.linkedin.com/company/example
+
+# Role mailboxes only.
+contact:
+  topics:
+    - email: info@example.com
+      label: { sl: Splošna vprašanja, en: General questions, de: Allgemeine Fragen }
+    - email: sales@example.com
+      label: { sl: Prodaja, en: Sales, de: Vertrieb }
+  security_email: security@example.com
+  map_url: https://www.openstreetmap.org/search?query=Ljubljana
+
+legal_pages:
+  imprint: true
+  privacy: true
+  accessibility: true
+  sustainability: true
+
+structured_data: Organization
+
+collections:
+  - id: services
+    title: { sl: Storitve, en: Services, de: Leistungen }
+    lead:
+      sl: Kaj ponujamo.
+      en: What we offer.
+      de: Was wir anbieten.
+    nav: true
+    home: true
+
+# Optional; the template's neutral colours are kept for what is missing.
+theme:
+  theme_color: "#14532d"
+  accent: "#14532d"
+  accent_text: "#14532d"
+  accent_contrast: "#ffffff"

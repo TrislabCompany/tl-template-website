@@ -4,7 +4,7 @@ The template for content sites on the Trislab platform. Read this first; the det
 
 ## What it is
 
-An [Astro](https://astro.build) site built into static files, served by Cloudflare Pages. The sample site is in English and Slovenian. It has a home page, a sample list of Markdown items with a page for each, an about page, a contact page, an imprint, a privacy policy, an accessibility statement, a sustainability page, a sitemap page, a 404 page, and a footer that shows the Environment and version it runs in on every Environment except production, read from `/config.json`. Interface-only language packs for Croatian, Italian and Serbian are included.
+An [Astro](https://astro.build) site built into static files, served by Cloudflare Pages. The sample site is in English and Slovenian. It has a home page, a sample list of Markdown items with a page for each, an about page, a contact page, an imprint, a privacy policy, an accessibility statement, a sustainability page, a sitemap page, a 404 page, and a footer that shows the Environment and version it runs in on every Environment except production, read from `/config.json`. Interface-only language packs for Croatian, Italian, Serbian and German are included.
 
 ## When to use it
 
@@ -20,7 +20,9 @@ Use it for a site that shows content, such as pages, articles, a company or a do
 
 You don't create a repository from this template yourself. The platform creates it when your product is onboarded: the onboarding PR in `tl-cloud-infrastructure` adds the repository to `catalog/repos.yaml`, named `<customer>-website-<product>`, and the pipeline creates it from this template with its team, rules, Cloudflare Pages project and `dev`, `staging` and `production` Environments. Don't use GitHub's "Use this template" button.
 
-The new repository gets a copy of these files, and records the template release it came from in `.template-version`. Later template releases reach it only as `update-from-template` PRs, which change the platform's files and merge the template's changes into the shared ones, and never touch your code, content or this README ([docs/upgrading/README.md](docs/upgrading/README.md)). From then on the code, this README and `docs/` are your team's.
+The new repository gets a copy of these files, with the sample site still in it, and deploys nothing yet. Its first PR, branch `init-site`, runs `pnpm init-site` with a `site.yaml` written from the site's intake: it deletes the sample and template-only files, writes the site's settings, README, brand, code owners and `.template-version` ([docs/getting-started.md](docs/getting-started.md#a-new-site)).
+
+The repository records the template release it came from in `.template-version`. Later template releases reach it only as `update-from-template` PRs, which change the platform's files and merge the template's changes into the shared ones, and never touch your code, content or this README ([docs/upgrading/README.md](docs/upgrading/README.md)). From then on the code, this README and `docs/` are your team's.
 
 ## Features included
 
@@ -69,10 +71,12 @@ Renovate proposes updates every Monday, and Dependabot raises security fixes as 
 | `.github/` | The workflows (ci, deploy, release, promote), the setup action, the PR template and the code owners |
 | `AGENTS.md`, `CLAUDE.md`, `.agents/skills/`, `.claude/skills/` | The guide for coding agents and their skills: `release` and `update-from-template` |
 | `template-manifest.yaml` | The ownership of every path, for template updates. Only in the template |
+| `site.schema.json`, `scripts/init-site.mjs`, `scripts/init/` | The init script, the schema of its input `site.yaml` and its templates. Only in the template: the init PR deletes them |
 | `docs/` | The detail behind this README |
 
 ## First steps
 
+0. **A new site is initialised, not edited by hand:** see [docs/getting-started.md](docs/getting-started.md#a-new-site). The steps below are for a site that exists.
 1. **Set the site's facts:** languages, company, contact, lists of items and legal pages in `src/site.config.ts` ([site-settings.md](docs/site-settings.md)), and the brand in `src/styles/tokens.css`.
 2. **Run it locally:** `pnpm install`, then `pnpm dev`, and open <http://localhost:4321>. Run `pnpm test` and `pnpm test:a11y` before you push. [getting-started.md](docs/getting-started.md) also runs it as Cloudflare Pages serves it.
 3. **Open your first PR:** change a page in `src/pages/[...lang]/`, push a branch and open a PR. `ci / ci` must pass and a code owner must approve.
