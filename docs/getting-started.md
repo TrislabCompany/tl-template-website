@@ -26,7 +26,7 @@ Open <http://localhost:4321>. The page reloads when you save a file. The dev ser
 pnpm test
 ```
 
-`pnpm test` runs `astro check`, which type-checks the pages and the content, the linter (`pnpm lint`), then the unit tests of the scripts (`pnpm test:unit`), `astro build` and the checks on the built site: the page-weight budget, `security.txt` ([site-settings.md](site-settings.md)), the claims of the legal pages (`scripts/check-claims.mjs`: no JavaScript in production, the published CO₂ figures), the search-engine rule (`scripts/check-noindex.mjs`: dev and staging stay noindex, nofollow even with `ROBOTS_INDEX=true`) and the browser check (`scripts/check-browser.mjs`: axe-core against WCAG 2.1 AA at desktop and 320 pixels, no sideways scrolling, no cookies or storage, no third-party requests). The browser check needs Chromium, once per machine: `pnpm exec playwright install chromium`. `ci / ci` runs `pnpm install --frozen-lockfile`, `pnpm exec playwright install --with-deps chromium`, then `pnpm test` and `pnpm test:a11y`, then Lighthouse CI, which runs on GitHub only.
+`pnpm test` runs `astro check`, which type-checks the pages and the content, the linter (`pnpm lint`), then the unit tests of the scripts (`pnpm test:unit`), `astro build` and the checks on the built site: the page-weight budget, `security.txt` ([site-settings.md](site-settings.md)), the claims of the legal pages (`scripts/check-claims.mjs`: no JavaScript in production, the published CO₂ figures) and the browser check (`scripts/check-browser.mjs`: axe-core against WCAG 2.1 AA at desktop and 320 pixels, no sideways scrolling, no cookies or storage, no third-party requests). The browser check needs Chromium, once per machine: `pnpm exec playwright install chromium`. `ci / ci` runs `pnpm install --frozen-lockfile`, `pnpm exec playwright install --with-deps chromium`, then `pnpm test` and `pnpm test:a11y`, then Lighthouse CI, which runs on GitHub only.
 
 Then run the accessibility check on the built site (you need Chrome; see [quality-checks.md](quality-checks.md)):
 
@@ -62,8 +62,7 @@ Then check it:
 | <http://localhost:8788/en/about/> | A redirect (308) to `/en/about` |
 | <http://localhost:8788/no-such-page> | The site's 404 page, with status 404 |
 | <http://localhost:8788/config.json> | `{"PLATFORM_ENVIRONMENT":"local","PUBLIC_GREETING":"hello"}` |
-| `curl -I http://localhost:8788/en` | The headers of `public/_headers`, and `X-Robots-Tag: noindex, nofollow` |
-| <http://localhost:8788/robots.txt> | `Disallow: /`, because `local` is not production; the sitemap files are gone too |
+| `curl -I http://localhost:8788/en` | The headers of `public/_headers` |
 
 Stop it with Ctrl+C. Run `pnpm build` again before you use `dist/` for anything else: `write-config.mjs` changed it.
 

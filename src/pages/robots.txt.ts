@@ -1,11 +1,9 @@
-// /robots.txt of a site that may be indexed: search engines and AI answer
+// /robots.txt: search engines and AI answer
 // engines may read the site; crawlers that only collect text to train AI
 // models may not. The sitemap is named with the site's own address.
 //
-// This is the file of an indexable site. A deploy to any Environment other
-// than production, or to production before ROBOTS_INDEX is "true", replaces it
-// with "Disallow: /" and deletes the sitemap (scripts/write-config.mjs,
-// docs/deployment.md#search-engines): nothing here can open dev or staging.
+// It is the same in every Environment: dev and staging are protected by
+// Cloudflare Access, not by this file.
 //
 // robots.txt is a request, not a lock: well-behaved crawlers follow it.
 import type { APIRoute } from "astro";

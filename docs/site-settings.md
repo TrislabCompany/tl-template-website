@@ -105,41 +105,35 @@ The check writes `page-weight-report.json` (not committed, not served), with eac
 
 The site can have a yearly CO₂ estimate for the ESG figures of the site's owner. It is for internal use. Never publish it on the site.
 
-The estimate has two parts:
-
-| Part | Method | Who |
-| --- | --- | --- |
-| Web: the data centre, the network and the visitors' devices | Average page weight × yearly visits, with the Sustainable Web Design model, version 4, in the open-source library [CO2.js](https://developers.thegreenwebfoundation.org/co2js/) (`@tgwf/co2`, pinned in `package.json`) | `pnpm co2` |
-| Cloud: the site's own Azure resources | The figure of the Azure carbon optimization report for the last 12 months | The platform team reads it by hand in the Azure portal and gives it to `pnpm co2` |
+The estimate is the web part only: the data centre, the network and the visitors' devices. It multiplies the average page weight by the yearly visits, with the Sustainable Web Design model, version 4, in the open-source library [CO2.js](https://developers.thegreenwebfoundation.org/co2js/) (`@tgwf/co2`, pinned in `package.json`). `pnpm co2` does it.
 
 ### When to run it
 
-Once a year, for the year just ended, for example in January. Run it again with the Azure figure when the platform team has read it.
+Once a year, for the year just ended, for example in January.
 
 ### How to run it
 
 1. Run `pnpm install` and `pnpm test`. The test builds the site and writes `page-weight-report.json`. The script stops with a message when the file is missing.
-2. Get the visits of the year. A site with analytics takes them from the analytics tool. A site without analytics takes the visits from Cloudflare's traffic statistics. Say which one in `--visits-source`.
+2. Get the visits of the year. A site with analytics takes them from the analytics tool. A site without analytics takes the visits from Cloudflare traffic statistics. Say which one in `--visits-source`.
 3. Run:
 
    ```
    pnpm co2 --visits 120000 --visits-source "Cloudflare traffic statistics"
    ```
 
-4. Ask the platform team for the Azure carbon optimization figure (kg CO₂e) and its period. Run the command again with `--azure-kg 12.5 --azure-period "2025-11 to 2026-10" --force`. Without `--force` the script does not overwrite a note.
-5. Commit `docs/co2/<year>.md`. It is the record of the year.
+4. Commit `docs/co2/<year>.md`. It is the record of the year. Without `--force` the script does not overwrite a note.
 
-Other options: `--year` (default: this year), `--azure-source` (default: Azure carbon optimization report), `--green`, `--report`, `--out`. `pnpm co2 --help` lists them.
+Other options: `--year` (default: this year), `--green`, `--report`, `--out`, `--force`. `pnpm co2 --help` lists them.
 
 ### What the note says
 
-The note `docs/co2/<year>.md` holds the date, the average page weight, the visits and their source, the model and its version, the CO2.js version, the result in kg CO₂e per year and in g per visit, and the Azure figure with its source and period. The result is calculated from measured page weight and visits, so it is only as good as the visit count. The Azure figure is recorded as given.
+The note `docs/co2/<year>.md` holds the date, the average page weight, the visits and their source, the model and its version, the CO2.js version, and the result in kg CO₂e per year and in g per visit. The result is calculated from measured page weight and visits, so it is only as good as the visit count.
 
 ### Assumptions
 
 - A visit loads one page of the average weight, with no cache. This is on the safe side for a visit with one page and low for a visit with many.
-- The host is not counted as green hosting, because Azure is not checked against the Green Web Foundation list. Use `--green` only when the host is verified green. The note says which was used.
-- Shared cloud parts are not split per site. They are in neither figure.
+- The host is not counted as green hosting. Use `--green` only when the host is verified against the Green Web Foundation list. The note says which was used.
+- Only the web part is counted. The hosting and shared infrastructure are not split per site and are in no figure.
 
 ## 9. Brand and the values kept in one place
 

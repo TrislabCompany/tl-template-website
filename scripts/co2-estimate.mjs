@@ -4,10 +4,10 @@
 //
 //   pnpm co2 --visits 120000 --visits-source "Cloudflare traffic statistics"
 //
-// Web part: the Sustainable Web Design model, version 4, through CO2.js. It
-// multiplies the average page weight by the yearly visits. Cloud part: the
-// Azure carbon optimization figure, read by hand from the Azure portal and
-// only recorded here. The note is written to docs/co2/<year>.md.
+// The Sustainable Web Design model, version 4, through CO2.js: it multiplies
+// the average page weight by the yearly visits and covers the data centre,
+// the network and the visitors' devices. The note is written to
+// docs/co2/<year>.md.
 
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -28,9 +28,6 @@ Required:
 
 Optional:
   --year <yyyy>              The year the figures are for (default: this year)
-  --azure-kg <number>        Azure carbon optimization figure, kg CO2e
-  --azure-period <text>      The period of the Azure figure, e.g. "2025-11 to 2026-10"
-  --azure-source <text>      Where the Azure figure comes from (default: the report's name)
   --green                    The host is verified green hosting (default: not green)
   --report <file>            Page-weight report (default: page-weight-report.json)
   --out <file>               Note to write (default: docs/co2/<year>.md)
@@ -61,9 +58,6 @@ export function parseCliArgs(argv, now = new Date()) {
         visits: { type: "string" },
         "visits-source": { type: "string" },
         year: { type: "string" },
-        "azure-kg": { type: "string" },
-        "azure-period": { type: "string" },
-        "azure-source": { type: "string" },
         green: { type: "boolean", default: false },
         report: { type: "string" },
         out: { type: "string" },
@@ -89,15 +83,6 @@ export function parseCliArgs(argv, now = new Date()) {
     force: values.force,
   };
 
-  if (values["azure-kg"] !== undefined) {
-    options.azure = {
-      kg: positive("--azure-kg", values["azure-kg"]),
-      period: nonEmpty("--azure-period (needed with --azure-kg)", values["azure-period"]),
-      source: values["azure-source"]?.trim() || "Azure carbon optimization report",
-    };
-  } else if (values["azure-period"] !== undefined || values["azure-source"] !== undefined) {
-    throw new Error("--azure-period and --azure-source need --azure-kg.");
-  }
   return options;
 }
 
@@ -114,7 +99,7 @@ const grams = (valueKg) => `${(valueKg * 1000).toPrecision(2)} g`;
 const kb = (bytes) => `${(bytes / 1024).toFixed(1)} KB`;
 
 /** The yearly note, as Markdown. */
-export function buildNote({ year, date, averageBytes, pageCount, visits, visitsSource, green, co2jsVersion, result, azure }) {
+export function buildNote({ year, date, averageBytes, pageCount, visits, visitsSource, green, co2jsVersion, result }) {
   const lines = [
     `# CO2 estimate ${year}`,
     "",
@@ -143,35 +128,12 @@ export function buildNote({ year, date, averageBytes, pageCount, visits, visitsS
     "- Every visit loads the page without a cache. Repeat visits that use the browser cache would cause less.",
     green
       ? "- The host is counted as green hosting, so its electricity is counted as renewable."
-      : "- The host is not counted as green hosting. Azure is not checked against the Green Web Foundation list, so this is the safe side.",
+      : "- The host is not counted as green hosting. Not counting it is the safe side; set --green only for a host verified against the Green Web Foundation list.",
     "- The model covers the data centre, the network and the visitors' devices.",
     "",
-    "## Cloud part",
+    "Only the web part is counted. Shared infrastructure is not split per site and is not in the figures above.",
     "",
   ];
-  if (azure) {
-    lines.push(
-      "| | |",
-      "| --- | --- |",
-      `| Azure carbon optimization figure | ${azure.kg} kg CO2e |`,
-      `| Period | ${azure.period} |`,
-      `| Source | ${azure.source}, read by hand |`,
-      "",
-      "This is the platform team's figure for the site's own Azure resources. It is recorded here as given and is not checked.",
-    );
-  } else {
-    lines.push(
-      "No Azure figure given (assumption: not read yet).",
-      "The platform team reads it from the Azure carbon optimization report for the site's own resources and runs this script again with `--azure-kg`, `--azure-period` and `--force`.",
-    );
-  }
-  lines.push(
-    "",
-    "## Shared parts",
-    "",
-    "The shared parts of the stamp, such as the Container Apps environment, are not split per site. They are not in the figures above.",
-    "",
-  );
   return lines.join("\n");
 }
 
@@ -224,14 +186,12 @@ async function main() {
     green: options.green,
     co2jsVersion,
     result,
-    azure: options.azure,
   });
   await mkdir(dirname(options.out), { recursive: true });
   await writeFile(options.out, note);
 
   console.log(`co2: average page weight ${kb(averageBytes)}, ${options.visits} visits (${options.visitsSource}).`);
   console.log(`co2: ${kg(result.kgPerYear)} kg CO2e in ${options.year} (${grams(result.kgPerVisit)} per visit), ${MODEL} v${MODEL_VERSION}, CO2.js ${co2jsVersion}.`);
-  console.log(options.azure ? `co2: Azure ${options.azure.kg} kg CO2e (${options.azure.period}).` : "co2: no Azure figure given.");
   console.log(`co2: note written to ${options.out}`);
 }
 

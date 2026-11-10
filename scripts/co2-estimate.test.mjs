@@ -13,13 +13,7 @@ test("parses the required arguments and defaults the year", () => {
   assert.equal(options.visitsSource, "Cloudflare traffic statistics");
   assert.equal(options.year, 2026);
   assert.equal(options.green, false);
-  assert.equal(options.azure, undefined);
   assert.match(options.out, /co2[\\/]2026\.md$/);
-});
-
-test("parses the Azure figure with its period and a default source", () => {
-  const options = parseCliArgs([...base, "--azure-kg", "12.5", "--azure-period", "2025-11 to 2026-10"], now);
-  assert.deepEqual(options.azure, { kg: 12.5, period: "2025-11 to 2026-10", source: "Azure carbon optimization report" });
 });
 
 test("rejects missing, wrong and unknown arguments", () => {
@@ -28,8 +22,6 @@ test("rejects missing, wrong and unknown arguments", () => {
   assert.throws(() => parseCliArgs(["--visits", "0", "--visits-source", "x"], now), /--visits/);
   assert.throws(() => parseCliArgs(["--visits", "1.5", "--visits-source", "x"], now), /whole number/);
   assert.throws(() => parseCliArgs(["--visits", "abc", "--visits-source", "x"], now), /--visits/);
-  assert.throws(() => parseCliArgs([...base, "--azure-kg", "5"], now), /--azure-period/);
-  assert.throws(() => parseCliArgs([...base, "--azure-period", "2026"], now), /--azure-kg/);
   assert.throws(() => parseCliArgs([...base, "--unknown"], now));
 });
 
@@ -75,8 +67,5 @@ test("the note names the sources, versions, assumptions and the shared parts", (
   assert.match(without, /Sustainable Web Design, version 4/);
   assert.match(without, /CO2\.js \(@tgwf\/co2\) 0\.19\.0/);
   assert.match(without, /not split per site/);
-  assert.match(without, /No Azure figure given/);
-  const withAzure = buildNote({ ...input, azure: { kg: 12.5, period: "2025-11 to 2026-10", source: "Azure carbon optimization report" } });
-  assert.match(withAzure, /12\.5 kg CO2e/);
-  assert.match(withAzure, /2025-11 to 2026-10/);
+  assert.doesNotMatch(without, /Azure/);
 });

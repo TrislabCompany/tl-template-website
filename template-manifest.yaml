@@ -27,8 +27,7 @@ paths:
   - { path: .github/workflows/template-release.yml, ownership: template-only }
 
   # The platform's part: the same in every product repository, never edited there.
-  # The workflows and the deploy-time scripts are what the protection rule of
-  # search engines (docs/deployment.md#search-engines) and the release process rest on.
+  # The workflows and the deploy-time scripts are what the release process rests on.
   - { path: .github/workflows/*, ownership: platform }
   - { path: .github/actions/**, ownership: platform }
   - { path: .agents/skills/release/**, ownership: platform }
@@ -40,7 +39,6 @@ paths:
   - { path: renovate.json, ownership: platform }
   - { path: scripts/write-config.mjs, ownership: platform }
   - { path: scripts/write-config.test.mjs, ownership: platform }
-  - { path: scripts/check-noindex.mjs, ownership: platform }
   - { path: scripts/version.mjs, ownership: platform }
   - { path: scripts/version.test.mjs, ownership: platform }
   - { path: scripts/status.mjs, ownership: platform }

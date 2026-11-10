@@ -45,16 +45,6 @@ Only the build for dev is made from the commit at deploy time. staging and produ
 - A tag is annotated, made by the workflow as `github-actions[bot]`, and never moved or deleted. A ruleset forbids it. A wrong release is replaced by the next version.
 - Only people with write access to the repository can run *Release new version* and *Promote to production*. *Release new version* runs only from `main` and refuses when there is no new commit.
 
-## Search engines
-
-A site that is not meant to be found must never be indexed, so the rule is built into the deploy and no setting can switch it off:
-
-- **Only `production`, and only with `ROBOTS_INDEX=true`, is indexable.** The Environment is the one the workflow deploys to (`PLATFORM_ENVIRONMENT`). A variable of the GitHub Environment cannot change it, and a missing or unknown name counts as not production.
-- **Every other deploy, `dev` and `staging` always, and `production` until it is public,** gets: the header `X-Robots-Tag: noindex, nofollow` on every response, `<meta name="robots" content="noindex, nofollow">` on every page, a `robots.txt` with `Disallow: /`, and no sitemap (`sitemap-index.xml` and `sitemap-N.xml` are deleted). `ROBOTS_INDEX=true` on `dev` or `staging` is ignored, and the deploy log says so.
-- **An indexable production** keeps the built `robots.txt` and sitemap, and is noindex only on its `*.pages.dev` address.
-
-The same build runs everywhere, so the files differ only at deploy: `scripts/write-config.mjs` makes the change, `pnpm test` proves it (`scripts/write-config.test.mjs` and `scripts/check-noindex.mjs` on the real build), and the script is a `platform` file that a product never edits.
-
 ## Where the staging version is kept
 
 Every deploy is a GitHub deployment of its Environment, made by `pages-deploy.yml` with the task `deploy:pages` and the version as its ref: a commit for dev, a tag for staging and production. *Promote to production* reads the newest `deploy:pages` deployment of `staging`, checks that it succeeded and that its ref is a tag `vX.Y.Z`, and promotes that tag. GitHub's own deployments for the jobs (task `deploy`) are ignored.
@@ -119,6 +109,6 @@ The Pages project, the hostnames, DNS, Access, the GitHub Environments and their
 
 The token may only edit Pages (`Cloudflare Pages: Edit`); it has no DNS or zone rights. Cloudflare cannot limit it to one project, so it is kept only in the Environments, and production deploys need a reviewer.
 
-**Making the site public:** add the site's domain (and the `www` redirect) to the Pages project, set `SITE_URL` to the site's address and `ROBOTS_INDEX` to `true` on the `production` Environment, remove the Access application of production, and turn the production address into a permanent redirect to the site's domain. Then promote again so the robots files change. `url` in `src/site.config.ts` must already be the site's address, so no rebuild is needed. `ROBOTS_INDEX` has an effect only on `production`: see [Search engines](#search-engines).
+**Making the site public:** add the site's domain (and the `www` redirect) to the Pages project, set `SITE_URL` to the site's address on the `production` Environment, remove the Access application of production, and turn the production address into a permanent redirect to the site's domain. `url` in `src/site.config.ts` must already be the site's address, so no rebuild is needed. Nothing else switches indexing on: `dev` and `staging` are protected by Cloudflare Access, which the infrastructure enforces, and `robots.txt` and the sitemap are the same in every Environment.
 
 **Tearing it down:** a PR in `tl-cloud-infrastructure` removes the site's entries. Its apply deletes the custom domains, DNS records, Access applications, the Pages project with all its deployments, the GitHub Environments with their variables and secret, and revokes the token. The repository is archived, not deleted, so its name is never reused. To retire one Environment, remove only its entries.

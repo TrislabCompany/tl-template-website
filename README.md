@@ -30,15 +30,14 @@ What works on the first deploy, with no change:
 - Several languages, each under its own URL (`/en`, `/sl`), with `hreflang`, `x-default`, a canonical link and a language switch on every page. A one-language site has no prefix.
 - Lists of items kept as Markdown (`collections` in `src/site.config.ts`): a list page, a page per item, a home page section and a menu link for each.
 - A contact page, an imprint, a privacy policy, an accessibility statement and a sustainability page, filled from `src/site.config.ts` and Markdown, and linked from the footer. The legal pages show no date.
-- A sitemap of every page in every language, a sitemap page for visitors, and a `robots.txt` that names the sitemap and blocks AI training crawlers.
-- **Closed to search engines everywhere except a public production:** on `dev`, `staging` and an unreleased `production`, every response has `X-Robots-Tag: noindex, nofollow`, every page a robots meta tag, `robots.txt` is `Disallow: /` and there is no sitemap. No variable can open `dev` or `staging` ([docs/deployment.md](docs/deployment.md#search-engines)).
+- A sitemap of every page in every language, a sitemap page for visitors, and a `robots.txt` that names the sitemap and blocks AI training crawlers (the same in every Environment).
 - The company as structured data (JSON-LD, `Organization` or `LocalBusiness`) on every page, Open Graph and Twitter metadata, a skip link.
 - `/.well-known/security.txt`, with its expiry date checked in `ci`.
 - A page-weight budget: `ci` fails when a page or its JavaScript is over the limit.
 - `/config.json`, written at deploy from the `PLATFORM_*` and `PUBLIC_*` settings, so one build runs in every Environment.
 - Security headers on every answer, including a strict Content-Security-Policy, and long caching of hashed assets (`public/_headers`).
 - The brand in two places: `src/styles/tokens.css` and the logo (`src/components/Logo.astro`, `public/favicon.svg`).
-- The check `ci / ci` on every PR and every push to `main`: the template manifest, `astro check`, the linter, the unit tests, the build, the checks on the built site (page weight, `security.txt`, the claims of the legal pages, the search-engine rule, a browser check with axe-core), accessibility (pa11y-ci) and Lighthouse CI. On a PR only the steps the changed files need run.
+- The check `ci / ci` on every PR and every push to `main`: the template manifest, `astro check`, the linter, the unit tests, the build, the checks on the built site (page weight, `security.txt`, the claims of the legal pages, a browser check with axe-core), accessibility (pa11y-ci) and Lighthouse CI. On a PR only the steps the changed files need run.
 - Deploy to dev on every merge, *Release new version* to tag and build a version once, and *Deploy to staging* and *Promote to production* to deploy exactly that build.
 - A yearly CO₂ estimate for internal ESG figures: `pnpm co2`. It is never shown on the site.
 
@@ -85,7 +84,7 @@ Renovate proposes updates every Monday, and Dependabot raises security fixes as 
 - [Architecture](docs/architecture.md): the build, Cloudflare Pages, the headers and the request path.
 - [Site settings](docs/site-settings.md): languages, lists of items, contact and legal pages, structured data, `security.txt`, the page-weight budget, the brand and the yearly CO₂ estimate.
 - [Configuration](docs/configuration.md): the settings, `/config.json`, and how to add a `PUBLIC_` setting.
-- [Deployment](docs/deployment.md): Environments, deploy, release and promote, search engines, rollback, and how the site is set up and torn down.
+- [Deployment](docs/deployment.md): Environments, deploy, release and promote, rollback, and how the site is set up and torn down.
 - [Quality checks](docs/quality-checks.md): what `ci / ci` checks, what runs for a PR, accessibility and Lighthouse.
 - [Dependencies](docs/dependencies.md): Renovate, Dependabot and how to add a package.
 - [Updates from the template](docs/upgrading/README.md): `.template-version`, who owns which file, and update PRs.

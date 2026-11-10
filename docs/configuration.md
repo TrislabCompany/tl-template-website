@@ -10,7 +10,7 @@ The site's own facts, which are the same in every Environment (languages, compan
 | --- | --- | --- |
 | Platform settings | `PLATFORM_ENVIRONMENT` (`dev`, `staging` or `production`), `PLATFORM_VERSION` (the tag `vX.Y.Z`, or the commit on dev) | The deploy workflow |
 | Your public settings | `PUBLIC_CONTACT_EMAIL`, `PUBLIC_ANALYTICS_ID` | Variables of the GitHub Environment (section 3) |
-| Deploy settings, never in `/config.json` | `CLOUDFLARE_ACCOUNT_ID`, `PAGES_PROJECT`, `SITE_URL`, `ROBOTS_INDEX`, the secret `CLOUDFLARE_API_TOKEN` | The platform, in the GitHub Environment ([deployment.md](deployment.md#set-up-and-tear-down)) |
+| Deploy settings, never in `/config.json` | `CLOUDFLARE_ACCOUNT_ID`, `PAGES_PROJECT`, `SITE_URL`, the secret `CLOUDFLARE_API_TOKEN` | The platform, in the GitHub Environment ([deployment.md](deployment.md#set-up-and-tear-down)) |
 
 The site has no secrets and reads none. A setting that must stay secret doesn't belong in a static site.
 
@@ -22,7 +22,6 @@ At deploy, `scripts/write-config.mjs` writes `dist/config.json` from every setti
 {"PLATFORM_ENVIRONMENT":"staging","PLATFORM_VERSION":"v0.3.2","PUBLIC_CONTACT_EMAIL":"hello@example.com"}
 ```
 
-The same script keeps the site out of search engines unless the Environment is `production` and its variable `ROBOTS_INDEX` is `true`, once the site is public. On `dev` and `staging` the variable has no effect ([deployment.md](deployment.md#search-engines)).
 
 In the browser, read it only through `src/lib/config.ts`:
 
