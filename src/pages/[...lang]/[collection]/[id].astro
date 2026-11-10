@@ -1,0 +1,37 @@
+---
+import { render, type CollectionEntry } from "astro:content";
+import ContactCta from "../../../components/ContactCta.astro";
+import { localizedPath, type Lang } from "../../../i18n";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { collectionSettings, itemPaths, type ItemCollection } from "../../../lib/items";
+
+export const getStaticPaths = itemPaths;
+
+const { entry, lang, collection, available } = Astro.props as {
+  entry: CollectionEntry<ItemCollection>;
+  lang: Lang;
+  collection: ItemCollection;
+  available: Lang[];
+};
+const settings = collectionSettings(collection);
+const { Content } = await render(entry);
+---
+
+<BaseLayout title={entry.data.title} description={entry.data.summary} lang={lang} available={available}>
+  <article class="prose">
+    <p class="eyebrow"><a href={localizedPath(lang, `/${collection}`)}>{settings.title[lang]}</a></p>
+    <h1>{entry.data.title}</h1>
+    <p class="lead">{entry.data.summary}</p>
+    <Content />
+    {
+      entry.data.tags.length > 0 && (
+        <ul class="tags">
+          {entry.data.tags.map((tag) => (
+            <li>{tag}</li>
+          ))}
+        </ul>
+      )
+    }
+  </article>
+  <ContactCta lang={lang} />
+</BaseLayout>

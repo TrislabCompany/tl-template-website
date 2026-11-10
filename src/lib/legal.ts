@@ -7,7 +7,7 @@ import { languages, prefixed } from "../i18n";
 import site from "../site.config";
 import { entryLang, entrySlug } from "./content";
 
-export async function legalPaths(page: "privacy" | "accessibility") {
+export async function legalPaths(page: "privacy" | "accessibility" | "sustainability") {
   if (!site.legalPages[page]) return [];
   const entries = (await getCollection("legal")).filter((entry) => entrySlug(entry) === page);
   return languages.map((lang) => {

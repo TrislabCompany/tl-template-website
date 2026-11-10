@@ -12,6 +12,25 @@ export interface PostalAddress {
   country: string;
 }
 
+/**
+ * A list of items kept as Markdown, such as services, products, news or cases:
+ * a page that lists them, /<language>/<id>, and one page per item,
+ * /<language>/<id>/<name>. The items are in src/content/<id>/<language>/ and
+ * the collection is defined in src/content.config.ts.
+ */
+export interface CollectionSettings<L extends string> {
+  /** The folder in src/content/ and the first part of the address, for example "services". */
+  id: string;
+  /** The heading of the list page, the menu entry and the home page section, per language. */
+  title: Localized<L>;
+  /** One sentence under the heading of the list, per language. */
+  lead: Localized<L>;
+  /** A link in the main menu. */
+  nav: boolean;
+  /** A section with the items on the home page. */
+  home: boolean;
+}
+
 export interface SiteSettings<L extends string> {
   /** The main address of the site in production, with no trailing slash. */
   url: string;
@@ -23,11 +42,15 @@ export interface SiteSettings<L extends string> {
   languages: readonly L[];
   /** The language "/" leads to, and the target of hreflang x-default. */
   defaultLanguage: L;
+  /** The colour of the browser's address bar on a phone: the site's background or brand colour, as "#rrggbb". */
+  themeColor: string;
+  /** The lists of items (see CollectionSettings). */
+  collections: CollectionSettings<L>[];
 
   company: {
-    /** The name people know, for example "Trislab". */
+    /** The name people know, for example "Example". */
     name: string;
-    /** The registered name, for example "Trislab d.o.o.". */
+    /** The registered name, for example "Example d.o.o.". */
     legalName: string;
     address: PostalAddress;
     registrationNumber?: string;
@@ -55,6 +78,8 @@ export interface SiteSettings<L extends string> {
     privacy: boolean;
     /** Only where the law requires one, or the client wants it. */
     accessibility: boolean;
+    /** The website's carbon footprint and the company's environmental measures (ESG). */
+    sustainability: boolean;
   };
 
   /** The JSON-LD on every page: Organization, or LocalBusiness when customers visit the address. */

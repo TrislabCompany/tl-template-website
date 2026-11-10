@@ -36,7 +36,7 @@ This file is owned by the platform and is the same in every template. A product 
    ```
 
 4. **Choose the target:** the next minor version after the base (`v0.1.x` → the highest `v0.2.*`), never more than one minor per PR. Within the same minor, the highest patch. When there is none, stop: the repository is up to date.
-5. **Read the notes** of every release after the base up to the target: `git show refs/template/<template>/<target>:docs/upgrading/template-<version>.md`. Collect **Requires**, **Breaking** and **Upgrade steps**. When a required `app-workflows` version is higher than the one the callers in `.github/workflows/` pin, stop until the PR that bumps it is merged.
+5. **Read the notes** of every release after the base up to the target: `git show refs/template/<template>/<target>:docs/upgrading/template-<version>.md`. Collect **Requires**, **Breaking** and **Upgrade steps**. When a requirement is not met here (for example a variable or secret in the GitHub Environments that the notes name), stop and say what the team or the platform team must set up first.
 6. **Read both manifests:** `template-manifest.yaml` at the base and at the target. A path's ownership is the first rule that matches it in the target's manifest; for a path the target deletes, in the base's.
 7. **Check skill names.** A skill folder in `.agents/skills/` that is not in the base manifest's `skills` is a project skill. When the target's `skills` adds a name that a project skill uses, stop and ask the team to rename theirs first. Never read, change or delete a project skill, or its pointer `.claude/skills/<name>/`.
 8. **List the changed paths:** `git diff --name-status --no-renames refs/template/<template>/<base> refs/template/<template>/<target>`. Apply each by its ownership:
@@ -50,7 +50,7 @@ This file is owned by the platform and is the same in every template. A product 
 
 9. **Rewrite the template block of `AGENTS.md`:** replace everything between `<!-- template-skills:start -->` and `<!-- template-skills:end -->` with the target's block. Leave the project skills table alone.
 10. **Do the upgrade steps** from the notes, in order.
-11. **Run the checks** that `ci.yml` runs (its `test-command`, e.g. `pnpm install --frozen-lockfile && pnpm test`). When a `shared` change to `package.json` changed dependencies, run the package manager's install first so the lockfile follows. Fix what the update broke; a conflict you can't resolve stays listed for the team.
+11. **Run the checks** that `ci / ci` runs: `pnpm install --frozen-lockfile`, `pnpm exec playwright install chromium`, `pnpm test` and `pnpm test:a11y` (Lighthouse runs on GitHub only). When a `shared` change to `package.json` changed dependencies, run the package manager's install first so the lockfile follows. Fix what the update broke; a conflict you can't resolve stays listed for the team.
 12. **Bump `.template-version`** to the target: its `version`, and `commit` = `git rev-parse refs/template/<template>/<target>^{commit}`.
 13. **Commit and open the PR** titled `chore(template): <template>/<target>`. The body has: the releases it brings and their notes' links; **Breaking**; the changes by ownership; **Conflicts** (file by file, or "none"); **Suggestions** for `product` paths; the upgrade steps done and any left to the team; and the check results. A person reviews and merges it. When more releases are waiting, say that the next update follows this merge.
 

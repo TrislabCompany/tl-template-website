@@ -1,6 +1,8 @@
 ---
+import ContactCta from "../../components/ContactCta.astro";
 import { languagePaths, t, type Lang } from "../../i18n";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import site from "../../site.config";
 
 export const getStaticPaths = languagePaths;
 
@@ -8,9 +10,13 @@ const { lang } = Astro.props as { lang: Lang };
 ---
 
 <BaseLayout title={t(lang, "nav.about")} lang={lang}>
-  <h1>{t(lang, "nav.about")}</h1>
-  <p>
-    This page is <code>src/pages/[...lang]/about.astro</code>. The build writes one copy per language, such as
-    <code>en/about/index.html</code>, and nginx serves it at <code>/en/about</code>.
-  </p>
+  <div class="prose">
+    <h1>{t(lang, "nav.about")}</h1>
+    <p class="lead">{site.description[lang]}</p>
+    <p>
+      This sample page is <code>src/pages/[...lang]/about.astro</code>. Replace its text with the site's own, in every
+      language, or move it to Markdown in <code>src/content/</code>.
+    </p>
+  </div>
+  <ContactCta lang={lang} />
 </BaseLayout>

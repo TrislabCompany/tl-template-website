@@ -1,0 +1,64 @@
+/* The brand of the site: its colours and its font. The only stylesheet a site
+   changes to look like its brand; global.css uses these names and nothing
+   else for colour and type. The values are a neutral sample.
+
+   Keep the contrast: --muted and --accent-text need 4.5:1 on --background and
+   on --surface for WCAG 2 AA small text, and --accent-contrast needs 4.5:1 on
+   --accent (the button). pnpm test fails on a page that doesn't. */
+
+/* The font is Inter, self-hosted from @fontsource-variable/inter. Only the
+   Latin and Latin Extended subsets are loaded: they cover the languages of
+   the sample (č, ć, đ, š, ž, à, è…). To use another font, change these rules,
+   --font-family, the font file imported in src/layouts/BaseLayout.astro (its
+   preload) and the dependency in package.json. */
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../../node_modules/@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2")
+    format("woff2-variations");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+    U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")
+    format("woff2-variations");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* A system font sized like Inter, shown until Inter has loaded, so the text
+   doesn't move when it swaps in (Cumulative Layout Shift, docs/quality-checks.md). */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("ArialMT"), local("Helvetica"), local("Roboto");
+  size-adjust: 107.12%;
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+}
+
+:root {
+  --background: #ffffff;
+  --surface: #f5f6f8;
+  --surface-strong: #e9ebf0;
+  --border: #d4d8e0;
+  --text: #1d2330;
+  /* 5.9:1 on --background and 5.4:1 on --surface. */
+  --muted: #566073;
+  --accent: #2457c5;
+  /* The accent as text on --background: 6.6:1. */
+  --accent-text: #2457c5;
+  /* Text on a button or other block in --accent: 6.6:1. */
+  --accent-contrast: #ffffff;
+  --radius: 0.75rem;
+  --font-family: "Inter Variable", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}

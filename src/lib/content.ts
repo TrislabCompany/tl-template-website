@@ -1,6 +1,6 @@
 // Helpers for content kept per language (src/content/<collection>/<language>/).
 
-import { getCollection, type CollectionEntry, type CollectionKey } from "astro:content";
+import { getCollection, type CollectionKey } from "astro:content";
 import { isLang, type Lang } from "../i18n";
 
 /** The language of an entry, from the first folder of its id ("sl/welcome"). */
@@ -17,7 +17,6 @@ export function entrySlug(entry: { id: string }): string {
   return entry.id.split("/").slice(1).join("/");
 }
 
-export const articleSlug = (article: CollectionEntry<"articles">) => entrySlug(article);
 
 /** Every entry of a collection in one language. */
 export async function getEntries<C extends CollectionKey>(collection: C, lang: Lang) {

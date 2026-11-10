@@ -1,0 +1,24 @@
+name: Deploy to dev
+
+# Every push to main: builds that commit and deploys it to dev. Run it by hand
+# to deploy the newest commit of main again (docs/deployment.md).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      deployments: write
+    uses: ./.github/workflows/pages-deploy.yml
+    with:
+      environment: dev
+      version: ${{ github.sha }}
+      source: build
+    secrets: inherit

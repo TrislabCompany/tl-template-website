@@ -1,0 +1,148 @@
+name: pages-deploy
+
+# Deploys one version of the site to one Environment on Cloudflare Pages, and
+# records it as a GitHub deployment of that Environment. Called by
+# deploy-dev.yml, deploy-staging.yml and promote.yml (docs/deployment.md).
+#
+# - source build:   builds the commit `version` (dev).
+# - source release: deploys the site-<version>.zip of the GitHub Release of the
+#                   tag `version`, built once by release.yml, so staging and
+#                   production get the same files.
+#
+# Only dist/config.json and the robots header differ between Environments
+# (scripts/write-config.mjs). config.json carries PLATFORM_ENVIRONMENT and
+# PLATFORM_VERSION (the tag, or the commit for dev), which the environment badge
+# shows. The Environment holds the variable
+# CLOUDFLARE_ACCOUNT_ID, PAGES_PROJECT and SITE_URL, the secret
+# CLOUDFLARE_API_TOKEN, and any PUBLIC_* setting.
+#
+# The deployment is created with task deploy:pages. Promotion reads it back to
+# find the version staging runs; the deployments GitHub makes for the job
+# itself have task deploy and are ignored.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: dev, staging or production. Also the Pages branch.
+        type: string
+        required: true
+      version:
+        description: The commit (source build) or the tag vX.Y.Z (source release)
+        type: string
+        required: true
+      source:
+        description: build or release
+        type: string
+        required: true
+
+permissions: {}
+
+jobs:
+  deploy:
+    name: deploy ${{ inputs.version }} to ${{ inputs.environment }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ vars.SITE_URL }}
+    concurrency:
+      group: pages-${{ inputs.environment }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      deployments: write
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      VERSION: ${{ inputs.version }}
+      SOURCE: ${{ inputs.source }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Check the inputs
+        run: |
+          case "$ENVIRONMENT" in dev|staging|production) ;; *) echo "::error::unknown environment $ENVIRONMENT"; exit 1;; esac
+          case "$SOURCE" in
+            build) [[ $VERSION =~ ^[0-9a-f]{40}$ ]] || { echo "::error::source build needs a full commit SHA, not $VERSION"; exit 1; } ;;
+            release) [[ $VERSION =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo "::error::source release needs a tag vX.Y.Z, not $VERSION"; exit 1; } ;;
+            *) echo "::error::unknown source $SOURCE"; exit 1 ;;
+          esac
+          for name in CLOUDFLARE_ACCOUNT_ID PAGES_PROJECT; do
+            [ -n "${!name}" ] || { echo "::error::the Environment $ENVIRONMENT has no variable $name (docs/deployment.md, Set up)"; exit 1; }
+          done
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PAGES_PROJECT: ${{ vars.PAGES_PROJECT }}
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.version }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Build the commit
+        if: inputs.source == 'build'
+        run: pnpm build
+        env:
+          ASTRO_TELEMETRY_DISABLED: 1
+
+      - name: Download the release
+        if: inputs.source == 'release'
+        run: |
+          rm -rf dist
+          if ! gh release download "$VERSION" --pattern "site-$VERSION.zip" --dir "$RUNNER_TEMP"; then
+            echo "::error::the GitHub Release $VERSION has no site-$VERSION.zip; only releases made by Release new version can be deployed"
+            exit 1
+          fi
+          unzip -q "$RUNNER_TEMP/site-$VERSION.zip" -d dist
+
+      - name: Write the settings of the Environment
+        run: node scripts/write-config.mjs dist
+        env:
+          PLATFORM_ENVIRONMENT: ${{ inputs.environment }}
+          PLATFORM_VERSION: ${{ inputs.version }}
+          VARS_JSON: ${{ toJSON(vars) }}
+
+      - name: Record the deployment
+        id: record
+        run: |
+          production=$([ "$ENVIRONMENT" = production ] && echo true || echo false)
+          id=$(jq -n --arg ref "$VERSION" --arg env "$ENVIRONMENT" --argjson prod "$production" '{
+              ref: $ref, environment: $env, task: "deploy:pages", auto_merge: false,
+              required_contexts: [], production_environment: $prod, transient_environment: false,
+              description: "Cloudflare Pages"
+            }' | gh api --method POST "repos/$GH_REPO/deployments" --input - --jq .id)
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          gh api --method POST "repos/$GH_REPO/deployments/$id/statuses" -f state=in_progress --silent
+
+      - name: Deploy to Cloudflare Pages
+        run: |
+          pnpm exec wrangler pages deploy dist \
+            --project-name "$PAGES_PROJECT" \
+            --branch "$ENVIRONMENT" \
+            --commit-hash "$(git rev-parse HEAD)" \
+            --commit-message "$VERSION" \
+            --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PAGES_PROJECT: ${{ vars.PAGES_PROJECT }}
+          WRANGLER_SEND_METRICS: false
+
+      - name: Mark the deployment successful
+        run: |
+          gh api --method POST "repos/$GH_REPO/deployments/${{ steps.record.outputs.id }}/statuses" \
+            -f state=success -f environment_url="$SITE_URL" -f log_url="$RUN_URL" --silent
+          echo "Deployed **$VERSION** to **$ENVIRONMENT** ${SITE_URL:+($SITE_URL)}" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Mark the deployment failed
+        if: failure() && steps.record.outputs.id != ''
+        run: |
+          gh api --method POST "repos/$GH_REPO/deployments/${{ steps.record.outputs.id }}/statuses" \
+            -f state=failure -f log_url="$RUN_URL" --silent
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

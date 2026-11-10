@@ -1,6 +1,6 @@
 ---
 import { render, type CollectionEntry } from "astro:content";
-import { locale, type Lang } from "../i18n";
+import type { Lang } from "../i18n";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 interface Props {
@@ -15,9 +15,6 @@ const { Content } = await render(entry);
 <BaseLayout title={entry.data.title} description={entry.data.description} lang={lang}>
   <article>
     <h1>{entry.data.title}</h1>
-    <time datetime={entry.data.updated.toISOString()}>
-      {entry.data.updated.toLocaleDateString(locale(lang), { dateStyle: "long" })}
-    </time>
     <Content />
   </article>
 </BaseLayout>

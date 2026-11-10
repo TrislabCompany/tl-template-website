@@ -1,0 +1,28 @@
+# The headers Cloudflare Pages sends with the site's files: security headers on
+# every answer, and caching. Pages already asks browsers to check every other
+# file again on each visit (max-age=0, must-revalidate).
+#
+# Different rules that match a path add their headers together, so set each
+# header in one rule only. Two rules with the same path don't add up: only the
+# last counts. At deploy, scripts/write-config.mjs puts
+# X-Robots-Tag: noindex, nofollow into the rule /* (docs/deployment.md).
+#
+# "! Access-Control-Allow-Origin" removes the header Pages adds by default:
+# no other site needs to read these files.
+
+/*
+  ! Access-Control-Allow-Origin
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Hashed assets never change: the browser keeps them for a year.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Written at deploy, per Environment, by scripts/write-config.mjs.
+/config.json
+  Cache-Control: no-store

@@ -1,21 +1,46 @@
 ---
-import ArticleCard from "../../components/ArticleCard.astro";
-import { languagePaths, t, type Lang } from "../../i18n";
+import ContactCta from "../../components/ContactCta.astro";
+import ItemCard from "../../components/ItemCard.astro";
+import { languagePaths, localizedPath, t, type Lang } from "../../i18n";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getEntries } from "../../lib/content";
+import { sortedItems, type ItemCollection } from "../../lib/items";
 import site from "../../site.config";
 
 export const getStaticPaths = languagePaths;
 
 const { lang } = Astro.props as { lang: Lang };
-const articles = (await getEntries("articles", lang)).sort(
-  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
+// A section for every list of items marked home in src/site.config.ts.
+const sections = await Promise.all(
+  site.collections
+    .filter((collection) => collection.home)
+    .map(async (collection) => ({ ...collection, items: await sortedItems(collection.id as ItemCollection, lang) })),
 );
 ---
 
 <BaseLayout title={site.name} lang={lang}>
-  <h1>{site.name}</h1>
-  <p>{site.description[lang]}</p>
-  <h2>{t(lang, "articles.heading")}</h2>
-  {articles.map((article) => <ArticleCard article={article} lang={lang} />)}
+  <section class="hero">
+    <h1>{site.name}</h1>
+    <p class="lead">{site.description[lang]}</p>
+    <div class="actions">
+      <a class="button" href={localizedPath(lang, "/contact")}>{t(lang, "cta.contact")}</a>
+    </div>
+  </section>
+
+  {
+    sections.map((section) => (
+      <section class="section" aria-labelledby={section.id}>
+        <h2 id={section.id}>
+          <a href={localizedPath(lang, `/${section.id}`)}>{section.title[lang]}</a>
+        </h2>
+        <p class="lead">{section.lead[lang]}</p>
+        <ul class="grid">
+          {section.items.map((entry) => (
+            <ItemCard entry={entry} collection={section.id as ItemCollection} lang={lang} />
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+
+  <ContactCta lang={lang} />
 </BaseLayout>

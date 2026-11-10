@@ -1,6 +1,6 @@
 # Configuration
 
-A static site can't read environment variables in the browser. So the container writes them into `/config.json` when it starts, and the site fetches that file. One image runs in every Environment, and nothing environment-specific is built into it.
+A static site can't read environment variables in the browser. So every deploy writes the Environment's settings into `/config.json`, and the site fetches that file. The same build runs in every Environment, and nothing environment-specific is built into it.
 
 The site's own facts, which are the same in every Environment (languages, company, contact, legal pages), are built into the pages from `src/site.config.ts` instead: see [site-settings.md](site-settings.md).
 
@@ -8,18 +8,21 @@ The site's own facts, which are the same in every Environment (languages, compan
 
 | Kind | Examples | Set by |
 | --- | --- | --- |
-| Platform settings | `PLATFORM_STAMP`, `PLATFORM_ENVIRONMENT`, `PLATFORM_TENANCY`, `PLATFORM_TENANTS` | The platform, on every app of the stamp |
-| Your public settings | `PUBLIC_CONTACT_EMAIL`, `PUBLIC_ANALYTICS_ID` | You, in the stamp's `stamp.yaml` (section 3) |
+| Platform settings | `PLATFORM_ENVIRONMENT` (`dev`, `staging` or `production`), `PLATFORM_VERSION` (the tag `vX.Y.Z`, or the commit on dev) | The deploy workflow |
+| Your public settings | `PUBLIC_CONTACT_EMAIL`, `PUBLIC_ANALYTICS_ID` | Variables of the GitHub Environment (section 3) |
+| Deploy settings, never in `/config.json` | `CLOUDFLARE_ACCOUNT_ID`, `PAGES_PROJECT`, `SITE_URL`, `ROBOTS_INDEX`, the secret `CLOUDFLARE_API_TOKEN` | The platform, in the GitHub Environment ([deployment.md](deployment.md#set-up-and-tear-down)) |
 
 The site has no secrets and reads none. A setting that must stay secret doesn't belong in a static site.
 
 ## 2. `/config.json`
 
-At container start, `docker-entrypoint.d/40-config.sh` writes `/config.json` from every setting whose name starts with `PLATFORM_` or `PUBLIC_`, and from nothing else. Any other setting the container has never reaches the browser.
+At deploy, `scripts/write-config.mjs` writes `dist/config.json` from every setting whose name starts with `PLATFORM_` or `PUBLIC_`, and from nothing else. `pages-deploy.yml` passes it all the variables of the GitHub Environment; any other variable never reaches the browser.
 
 ```json
-{"PLATFORM_STAMP":"shr-web-staging","PLATFORM_ENVIRONMENT":"staging","PUBLIC_CONTACT_EMAIL":"hello@example.com"}
+{"PLATFORM_ENVIRONMENT":"staging","PLATFORM_VERSION":"v0.3.2","PUBLIC_CONTACT_EMAIL":"hello@example.com"}
 ```
+
+The same script keeps the site out of search engines unless the Environment is `production` and its variable `ROBOTS_INDEX` is `true`, once the site is public. On `dev` and `staging` the variable has no effect ([deployment.md](deployment.md#search-engines)).
 
 In the browser, read it only through `src/lib/config.ts`:
 
@@ -30,25 +33,16 @@ const config = await loadConfig();
 const email = config.PUBLIC_CONTACT_EMAIL ?? "info@example.com";
 ```
 
-`loadConfig()` fetches the file once per page. When the file is missing, as with `pnpm dev`, it returns an empty object, so give every value a default. `src/components/EnvironmentBadge.astro` is an example.
+`loadConfig()` fetches the file once per page. When the file is missing, as with `pnpm dev`, it returns an empty object, so give every value a default. `src/components/EnvironmentBadge.astro` is an example: it shows the Environment and the version everywhere except production. A production deploy takes the badge and its script out of every page, so production pages run no JavaScript; a new component that reads `/config.json` in production must change that step in `scripts/write-config.mjs`.
 
 Values in `/config.json` are read in the browser, after the page has loaded. Content that search engines must see belongs in the pages themselves, not in `/config.json`.
 
 ## 3. Add a `PUBLIC_` setting
 
-1. Add the setting to the app in the stamp's `stamp.yaml`, in `tl-cloud-infrastructure` under `stamps/<landing zone>/<folder>/`, under `apps[].env` of the app `web`:
-
-   ```yaml
-   apps:
-     - name: web
-       env:
-         PUBLIC_CONTACT_EMAIL: hello@example.com
-   ```
-
-   Each Environment is its own stamp, so set it in each stamp that needs it, with that Environment's value. The PR goes through the infrastructure pipeline, and your team can open it.
+1. Ask the platform team to add the variable to each GitHub Environment that needs it, with that Environment's value. They are declared in `tl-cloud-infrastructure`, so a PR there sets them.
 2. Read it in the site through `loadConfig()`, with a default for when it is unset.
 3. Add it to `SiteConfig` in `src/lib/config.ts` if you want its name checked by TypeScript.
 
-The next deploy after the stamp's apply starts the container with the setting.
+The next deploy to that Environment writes it into `/config.json`. For production, that is the next promotion.
 
-To try it locally, pass it to the container: `docker run --rm -p 8080:8080 -e PUBLIC_CONTACT_EMAIL=hello@example.com website-web:local`.
+To try it locally, write it into a build: `pnpm build`, then `PLATFORM_ENVIRONMENT=local PUBLIC_CONTACT_EMAIL=hello@example.com node scripts/write-config.mjs dist`, and serve `dist/` with `pnpm exec wrangler pages dev dist` ([getting-started.md](getting-started.md)).

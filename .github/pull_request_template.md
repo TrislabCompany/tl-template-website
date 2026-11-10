@@ -4,6 +4,6 @@
 
 ## Checklist
 
-- [ ] `pnpm test` passes locally
-- [ ] `platform.yaml` is unchanged, or the change is described above and stays within the stamp's caps
+- [ ] `pnpm test` and `pnpm test:a11y` pass locally
+- [ ] The workflows in `.github/` are unchanged, or the change is described above
 - [ ] Screenshots of the changed pages are attached, or nothing visible changed

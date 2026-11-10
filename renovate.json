@@ -1,4 +1,60 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>TrislabCompany/tl-platform//renovate/default"]
+  "description": "Weekly dependency updates (docs/dependencies.md). Self-contained until tl-platform publishes renovate/default; then this body moves there and this file only extends it.",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":pinAllExceptPeerDependencies",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "timezone": "Europe/Ljubljana",
+  "schedule": ["before 7am on monday"],
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 10,
+  "labels": ["dependencies"],
+  "reviewersFromCodeOwners": true,
+  "automerge": false,
+  "rangeStrategy": "pin",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 7am on monday"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": false
+  },
+  "packageRules": [
+    {
+      "description": "Astro and its integrations move together.",
+      "groupName": "astro",
+      "matchPackageNames": ["astro", "@astrojs/**"]
+    },
+    {
+      "description": "The linter and its plugins.",
+      "groupName": "lint",
+      "matchPackageNames": ["eslint", "@eslint/**", "typescript-eslint", "eslint-plugin-astro", "globals"]
+    },
+    {
+      "description": "The accessibility and Lighthouse checks.",
+      "groupName": "quality checks",
+      "matchPackageNames": ["pa11y-ci", "@lhci/cli"]
+    },
+    {
+      "description": "GitHub Actions, pinned to digests.",
+      "groupName": "github actions",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      "description": "Major versions get their own PR (separateMajorMinor) and a label, so they are read with their migration guide.",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
+    },
+    {
+      "description": "Node stays on the version in .github/actions/setup and engines; moving it is a deliberate change.",
+      "matchDepNames": ["node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
 }

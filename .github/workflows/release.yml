@@ -1,22 +1,103 @@
-name: release
+name: Release new version
 
-# Releases a tag vX.Y.Z or vX.Y.Z-rc.<n> on main: tags the images that commit
-# built, creates the GitHub Release with their SBOMs, and deploys them to every
-# release tier Environment. Builds nothing. All steps live in the reusable
-# workflow in tl-platform, pinned by tag. Change nothing here.
+# By hand, from main: tags the newest commit of main with the next version,
+# builds the site once, and publishes it as a GitHub Release with notes from
+# the commit messages since the previous version. Deploy to staging starts
+# when this succeeds (docs/deployment.md).
+#
+# Only people with write access to the repository can run a workflow. The tag
+# is annotated and is never moved or deleted: a wrong release is replaced by
+# the next version.
 
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Which part of the version to raise: patch for a fix, minor for a feature, major for a breaking change"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
 
 permissions: {}
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
-      packages: write
-      id-token: write
-      attestations: read
-      actions: read
-    uses: TrislabCompany/tl-platform/.github/workflows/app-release.yml@app-workflows/v0.2.0
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Choose the version
+        id: version
+        run: node scripts/version.mjs next "$BUMP" | tee -a "$GITHUB_OUTPUT"
+        env:
+          BUMP: ${{ inputs.bump }}
+
+      - name: Write the release notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PREVIOUS: ${{ steps.version.outputs.previous }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" >/dev/null; then
+            echo "::error::the tag $VERSION exists already"; exit 1
+          fi
+          range=${PREVIOUS:+$PREVIOUS..}HEAD
+          changes=$(git log "$range" --no-merges --pretty='- %s (%h)')
+          if [ -z "$changes" ]; then
+            echo "::error::nothing to release: no commit since $PREVIOUS"; exit 1
+          fi
+          {
+            echo "$VERSION"
+            echo
+            echo "${PREVIOUS:+Changes since $PREVIOUS:}${PREVIOUS:-Changes:}"
+            echo
+            echo "$changes"
+          } > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: ./.github/actions/setup
+
+      # The Chromium that matches playwright in pnpm-lock.yaml, with the system
+      # libraries it needs. The browser check in pnpm test uses it.
+      - run: pnpm exec playwright install --with-deps chromium
+
+      # pnpm test ends with astro build: dist/ is the site that is released.
+      - name: Test and build
+        run: pnpm test
+        env:
+          ASTRO_TELEMETRY_DISABLED: 1
+
+      - name: Package the site
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: (cd dist && zip -qr "$RUNNER_TEMP/site-$VERSION.zip" .)
+
+      - name: Tag the commit
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag --annotate "$VERSION" --file "$RUNNER_TEMP/notes.md" "$GITHUB_SHA"
+          git push origin "refs/tags/$VERSION"
+
+      - name: Create the GitHub Release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          tail -n +3 "$RUNNER_TEMP/notes.md" > "$RUNNER_TEMP/release.md"
+          gh release create "$VERSION" "$RUNNER_TEMP/site-$VERSION.zip" \
+            --verify-tag --title "$VERSION" --notes-file "$RUNNER_TEMP/release.md"

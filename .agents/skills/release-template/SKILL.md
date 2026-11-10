@@ -26,12 +26,12 @@ Prepares one release of this template. Only in the template repository: this ski
    - removes or renames a path that products use;
    - changes a `docs/` heading a skill links to;
    - renames a skill or one of its commands, or adds a skill name;
-   - adds a required variable, secret or `platform.yaml` field;
-   - needs a newer `app-workflows` major version.
+   - adds a required variable or secret of the GitHub Environments, or a setting the infrastructure must provide;
+   - changes a name the infrastructure fixes: the Environments `dev`, `staging`, `production`, the workflow names, or the variables `CLOUDFLARE_ACCOUNT_ID`, `PAGES_PROJECT`, `SITE_URL`.
 4. **Propose the version** with the reason: major when breaking, minor for a feature, patch for a fix. Under `0.x`, breaking is a minor. Check it is new (`git tag -l`, `git ls-remote --tags origin`) and higher than every tag of the template. Ask the maintainer to confirm.
 5. **Write the notes** `docs/upgrading/template-vX.Y.Z.md`, with these headings:
    - **Breaking:** yes or no, and why;
-   - **Requires:** e.g. `app-workflows >= v0.3.0`, or "nothing new";
+   - **Requires:** e.g. "the variable `X` in every GitHub Environment", or "nothing new";
    - **Changes by ownership:** `platform`, `shared`, `product`, `template-only`, each with what changed and the PR;
    - **Upgrade steps:** what `update-from-template` or the team does by hand, in order, or "none".
 6. **Add the release** to the table in [docs/template-releases.md](../../../docs/template-releases.md#releases).

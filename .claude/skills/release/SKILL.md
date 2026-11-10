@@ -1,6 +1,6 @@
 ---
 name: release
-description: Deploy, release, promote or roll back this app, or show which version runs in which Environment — ship a merged change to dev, tag vX.Y.Z for the release tier after checking every release tag requirement, promote a version to prod, roll back to the previous version — following the steps for developers in docs/deployment.md. Use when the user asks to deploy, release, tag, promote, roll back, ship to production, or where a version runs.
+description: Deploy, release or promote this site on Cloudflare Pages, or show which version runs in which Environment — follow a merged change to dev, run the Release new version workflow to tag and build the next vX.Y.Z and deploy it to staging, run Promote to production, explain a rollback — following docs/deployment.md. Use when the user asks to deploy, release, tag, promote, roll back, ship to production, or where a version runs.
 metadata:
   owner: template-website
   ownership: platform
