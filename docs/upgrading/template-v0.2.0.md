@@ -18,6 +18,7 @@ Yes, for repositories on v0.1.x. The hosting changes: the image, `nginx/`, `plat
 ### platform
 
 - **`.github/workflows/`**: `deploy.yml` is removed. New: `ci.yml` (replaced), `checks.yml`, `deploy-dev.yml`, `deploy-staging.yml`, `pages-deploy.yml`, `release.yml` (replaced) and `promote.yml`. No workflow uses `tl-platform` any more.
+- **Template guard:** in a template repository (`github.event.repository.is_template`) *Deploy to dev*, *Deploy to staging*, *Release new version* and *Promote to production* skip every job, because a template deploys nowhere. In a repository made from the template they run as described.
 - **`.github/actions/setup/`**: Node 22, pnpm from `packageManager`, the dependencies from the lock file.
 - **`scripts/write-config.mjs`** and its tests: the deploy-time settings: `config.json` from the `PLATFORM_*` and `PUBLIC_*` settings, and the environment badge taken out of production. The Environment is the one the workflow deploys to, never a variable. The variable `ROBOTS_INDEX` is **no longer read**: `robots.txt`, the sitemap and the headers are the same in every Environment, and `dev` and `staging` are protected by Cloudflare Access, which the infrastructure enforces. The infrastructure repository may still set `ROBOTS_INDEX` on the GitHub Environments; it has no effect and can be removed there.
 - **`scripts/version.mjs`, `version.test.mjs`, `status.mjs`**: the release versions and `pnpm status`.

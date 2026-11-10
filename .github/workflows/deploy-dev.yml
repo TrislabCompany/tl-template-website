@@ -12,7 +12,8 @@ permissions: {}
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main'
+    # A template repository deploys nowhere; a repository made from it does.
+    if: github.ref == 'refs/heads/main' && !github.event.repository.is_template
     permissions:
       contents: read
       deployments: write

@@ -26,7 +26,8 @@ concurrency:
 
 jobs:
   release:
-    if: github.ref == 'refs/heads/main'
+    # A template repository releases nowhere; it is released by template-release.yml.
+    if: github.ref == 'refs/heads/main' && !github.event.repository.is_template
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
