@@ -29,7 +29,7 @@ flowchart LR
 
 | Concern | Rule |
 | --- | --- |
-| Routing | `/en/about` serves `en/about.html` and `/en` serves `en.html` (`build.format: "file"` in `astro.config.mjs`). An address ending in `/` or `.html` is redirected (308) to the one without. `/` is a small page that leads to the default language. A path with no file serves `404.html` with status 404 |
+| Routing | `/en/about` serves `en/about.html` and `/en` serves `en.html` (`build.format: "file"` in `astro.config.mjs`). An address ending in `/` or `.html` is redirected (308) to the one without. `/` is a small page that leads to the default language. A site's own redirects (an earlier site's addresses) go in `public/_redirects`; the build keeps them after the 301 from `/`. A path with no file serves `404.html` with status 404 |
 | Caching | Files under `/_astro/` have a hash in their name and are cached for a year. Every other file is checked again on each visit. `/config.json` is never cached |
 | Security headers | `Content-Security-Policy` (scripts, styles and images only from the site itself), `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy` on every answer, and no `Access-Control-Allow-Origin` |
 

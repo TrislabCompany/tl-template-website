@@ -1,5 +1,5 @@
 // @ts-check
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import sitemap from "@astrojs/sitemap";
 import { defineConfig } from "astro/config";
 import site, { languages } from "./src/site.config";
@@ -23,14 +23,18 @@ function canonical(url) {
 // "/" leads to the default language. Astro's redirect is a page with a
 // meta refresh, which search engines treat as weaker than a real redirect, so
 // Cloudflare Pages also gets dist/_redirects: a 301 from "/" that it answers
-// before it serves any file. The Astro page stays for `pnpm preview`.
+// before it serves any file. The Astro page stays for `pnpm preview`. A
+// site's own redirects (public/_redirects, which Astro copies to dist/ first,
+// such as the addresses of an earlier site) are kept after that line.
 /** @type {import("astro").AstroIntegration} */
 const rootRedirect = {
   name: "root-redirect",
   hooks: {
     "astro:build:done": async ({ dir }) => {
       if (!prefixed) return;
-      await writeFile(new URL("_redirects", dir), `/ /${site.defaultLanguage} 301\n`);
+      const file = new URL("_redirects", dir);
+      const own = await readFile(file, "utf8").catch(() => "");
+      await writeFile(file, `/ /${site.defaultLanguage} 301\n${own}`);
     },
   },
 };
