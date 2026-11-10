@@ -1,0 +1,18 @@
+---
+// "Interested? Write to us", with a link to the contact page.
+import { localizedPath, t, type Lang } from "../i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+
+<section class="cta-box">
+  <h2>{t(lang, "cta.heading")}</h2>
+  <p>{t(lang, "cta.text")}</p>
+  <div class="actions">
+    <a class="button" href={localizedPath(lang, "/contact")}>{t(lang, "cta.contact")}</a>
+  </div>
+</section>

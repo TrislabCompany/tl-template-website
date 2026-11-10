@@ -1,172 +1,124 @@
 # Deployment
 
-The platform builds the image once for each commit on `main`, and moves that same image, by its digest, from Environment to Environment. Nothing is rebuilt for production. You never deploy by hand and never create infrastructure yourself.
+The site is plain files on Cloudflare Pages. Every merge to `main` goes to **dev**. A release is a tag `vX.Y.Z` that is built once and deployed to **staging**, and after it has been checked there, the same files are promoted to **production**. Four workflows do all of it; nobody deploys by hand.
 
-## Environments and tiers
+## Environments
 
-Each Environment of the repository is one stamp: a Container Apps environment with the `web` app, in Azure. Each belongs to a tier:
+One Cloudflare Pages project, `<repository>`, has one Pages branch per Environment. Each Environment is also a GitHub Environment of this repository, which holds its settings and records every deploy.
 
-| Tier | Environments | Gets |
-| --- | --- | --- |
-| `dev` | `dev`, `<customer>-dev` | Every push to `main` |
-| `release` | `test`, `staging`, `uat`, `perf`, `demo`, and their `<customer>-` forms | Every release tag `vX.Y.Z` |
-| `prod` | `prod`, `<customer>-prod` | Only a promotion, after the Environment's reviewers approve |
+| Environment | Pages branch | Address | Runs | Gets a new version |
+| --- | --- | --- | --- | --- |
+| `dev` | `dev` (preview) | the dev address | The newest commit of `main` | On every merge, by *Deploy to dev* |
+| `staging` | `staging` (preview) | the staging address | The newest tag `vX.Y.Z` | After every release, by *Deploy to staging* |
+| `production` | `production` (the project's production branch) | the production address, later the site's own domain | The tag staging ran when it was promoted | Only by *Promote to production*, after a reviewer approves |
 
-A new repository starts with `dev`. Your team asks for another Environment through the platform team's onboarding form.
+dev, staging and, until the site is public, production ask visitors to sign in with Cloudflare Access. The same files are also reachable at `<branch>.<repository>.pages.dev`, which Access protects too.
 
 ## From PR to production
 
 ```mermaid
 flowchart LR
-  PR["PR"] -->|"ci.yml: build, test, scan"| CHECK["check ci / ci"]
-  CHECK -->|"merge"| MAIN["main"]
-  MAIN -->|"deploy.yml"| DEV["dev tier"]
-  MAIN -->|"tag vX.Y.Z, release.yml"| REL["release tier"]
-  REL -->|"promote.yml, approved"| PROD["prod tier"]
+  PR["PR"] -->|"ci / ci"| MAIN["main"]
+  MAIN -->|"Deploy to dev"| DEV["dev"]
+  MAIN -->|"Release new version: tag vX.Y.Z, build, GitHub Release"| REL["Release vX.Y.Z"]
+  REL -->|"Deploy to staging: newest tag"| STG["staging"]
+  STG -->|"Promote to production: approved"| PROD["production"]
 ```
 
-| Step | Workflow | What happens |
-| --- | --- | --- |
-| Check | `ci.yml`, on every PR and push to `main` | Builds the image, runs `pnpm test`, scans the image with Trivy and checks `platform.yaml`. Pushes nothing. The check `ci / ci` must pass before a PR can merge |
-| Deploy | `deploy.yml`, on every push to `main` | Builds the image once, scans it, pushes it to the GitHub Container Registry (GHCR) as `sha-<commit>` with its software bill of materials, and deploys it to every `dev` tier Environment |
-| Release | `release.yml`, on a tag `vX.Y.Z` on a commit of `main` | Builds nothing. Adds the tag to that commit's image, creates the GitHub Release, and deploys it to every `release` tier Environment |
-| Promote | `promote.yml`, by hand with a version and an Environment | Checks that the version runs healthy in a `release` tier Environment, waits for the reviewers, and deploys the same image. Rolling back is promoting the previous version |
-
-This template has `ci.yml`, `deploy.yml` and `release.yml`. The platform team adds `promote.yml` before the first production Environment. In a template repository, `deploy.yml` and `release.yml` skip every job, because a template deploys nowhere. In a repository created from the template they run as above.
-
-Each workflow is a thin caller of a reusable workflow in `tl-platform`, pinned to a tag `app-workflows/v<x.y.z>`. Don't add steps to them: the platform team changes the reusable workflows, and a PR bumps the tag in your repository.
-
-A deploy starts a new revision of the app. The revision gets traffic only once `/readyz` answers, and the previous one keeps serving until then. A deploy that fails leaves the Environment on the version it had.
-
-## Images
-
-Images are stored in GHCR as `ghcr.io/trislabcompany/<repository>/web`. They are private, also when the repository is public. The stamps pull them with the platform's pull token. You don't need to do anything for this.
-
-Trivy scans the image in every workflow. It fails on any secret in the image, and on a CRITICAL or HIGH vulnerability that has a fix. To accept a finding, add its ID to `.trivyignore` with a reason and an expiry date on the line above it; `devops` reviews that change.
-
-## `platform.yaml` and the caps
-
-`platform.yaml` says which image the repository builds and how the app is sized:
-
-| Field | Here | Meaning |
-| --- | --- | --- |
-| `profile` | `Consumption` | Serverless: you pay per use, and the app can scale to zero |
-| `cpu` | `0.25` | vCPU per replica, in steps of 0.25 |
-| `memory` | `0.5Gi` | Memory per replica. On `Consumption` it must be twice the CPU in Gi |
-| `min_replicas` | `0` | No replica while nobody visits; the first visit starts one |
-| `max_replicas` | `2` | At most two replicas under load |
-
-Each stamp has caps: the most each app may use. A sandbox stamp's default caps are `Consumption` only, 0.5 vCPU, `1Gi` and at most two replicas, and this file stays within them. `ci / ci` checks `platform.yaml` against the caps of every Environment on each PR in a repository created from the template, so a PR above a cap never merges. Each deploy checks again.
-
-To size one Environment differently, add an override under `environments`, within that Environment's caps:
-
-```yaml
-environments:
-  prod:
-    web: { min_replicas: 1, max_replicas: 4 }
-```
-
-## Asking for more
-
-Raising a cap, adding an Environment, a setting or a custom domain is a change to the stamp, not to this repository. Each Environment is a stamp in `tl-cloud-infrastructure`, under `stamps/<landing zone>/<folder>/stamp.yaml`.
-
-| You need | Change in `stamp.yaml` |
-| --- | --- |
-| More CPU, memory or replicas | `apps[].caps` of `web` |
-| A `PUBLIC_` setting | `apps[].env` of `web` ([configuration.md](configuration.md)) |
-
-Your team may open these PRs: the stamp's folder lists your team as a code owner next to the platform team. The infrastructure pipeline plans the change, the platform team approves the apply, and the next deploy can use the new caps. For an Environment or a custom domain, ask the platform team.
-
-## Release with the agent
-
-You don't need to type `git` or `gh` commands to deploy or release. Ask the coding agent (Claude Code, Cursor, Codex, …) in this repository. It reads `AGENTS.md` and follows the `release` skill (`.agents/skills/release/SKILL.md`), which runs the [steps for developers](#steps-for-developers) below for you. Type the command, or say it in your own words ("release this to staging", "what runs where?").
-
-| You type | What it checks | What it changes | Asks first |
+| Workflow | File | Starts | What it does |
 | --- | --- | --- | --- |
-| `release status` | Nothing | Nothing. It lists each Environment with the version it runs ([What runs where](#what-runs-where)) | No |
-| `release deploy` | The newest commit on `main` has a `deploy.yml` run | Nothing itself. `deploy.yml` started on the merge; the skill watches it and reports whether `dev` runs that commit | No |
-| `release tag [vX.Y.Z]` | The skill's release tag requirements: the version's format, that it is new and higher than every tag, the bump size it proposes from the commits (with its reason), the commit on `main`, its images in GHCR, a warning when it is not what runs in `dev`, the `release` tier Environments, no other `release.yml` run, your permission | It pushes one annotated tag `vX.Y.Z`. `release.yml` then creates the GitHub Release and deploys the same image to every `release` tier Environment. No file in the repository changes, and nothing is rebuilt | Yes: the version, the commit, the changes since the last tag and the Environments |
-| `release promote <version> [environment]` | `promote.yml` exists, the version runs healthy in a `release` tier Environment, and it is not a release candidate when the target is `prod` | It starts `promote.yml`. A reviewer of the Environment approves it on GitHub | Yes |
-| `release rollback [environment]` | The version that ran before the current one in that Environment | It promotes that previous version | Yes |
+| ci | `ci.yml` (steps in `checks.yml`) | Every commit of a PR, and every push to `main` | `pnpm test`, accessibility (pa11y-ci) and Lighthouse CI. The check `ci / ci` must pass before a PR merges. Deploys nothing |
+| Deploy to dev | `deploy-dev.yml` | Every push to `main`; by hand to deploy the newest commit again | Builds the commit and deploys it to `dev` |
+| Release new version | `release.yml` | By hand, from `main`, with `patch`, `minor` or `major` | Picks the next version, writes the notes from the commit messages since the previous version, runs `pnpm test`, builds the site once, pushes an annotated tag `vX.Y.Z` on the newest commit of `main`, and creates the GitHub Release with the notes and the built site, `site-vX.Y.Z.zip` |
+| Deploy to staging | `deploy-staging.yml` | When *Release new version* succeeds; by hand | Deploys the newest tag, by semantic version, to `staging`, from its `site-vX.Y.Z.zip`, and records the tag as staging's deployment |
+| Promote to production | `promote.yml` | By hand, no input | Reads the tag staging runs, waits for a reviewer of `production`, and deploys the same `site-vX.Y.Z.zip` there |
 
-### A release, from start to end
+`pages-deploy.yml` is the one deploy job the last three call. It writes the Environment's `/config.json` and robots header into the files, and in production takes the environment badge out of the pages (`scripts/write-config.mjs`, [configuration.md](configuration.md)), deploys them with `wrangler pages deploy`, and records the deploy as a GitHub deployment of the Environment.
 
-1. Ask the agent for the change. It runs `pnpm test` and opens the PR. `ci / ci` passes, and a code owner approves and merges.
-2. `release deploy`: `dev` now runs the merge commit. Check the change in `dev`.
-3. `release tag`: check the version it proposes and say yes. The `release` tier (for example `staging`) gets it.
-4. `release status`: `dev` runs the newest commit of `main`, and the `release` tier runs the tag.
+Only the build for dev is made from the commit at deploy time. staging and production deploy the files the release built, so production gets exactly what was checked on staging; only `/config.json` and the robots header differ.
 
-### What the skill never does
+## Versions and release notes
 
-- Move, delete or push again a tag. A wrong release is replaced by the next version.
-- Deploy with `az` or the portal, or start a workflow in a way this page doesn't describe.
-- Skip an Environment's reviewers.
-- Edit the workflows or `platform.yaml`.
+- Versions follow semantic versioning, `vX.Y.Z`: `major` for a change that breaks something for visitors or links, `minor` for a feature, `patch` for a fix. Under `0.x`, a breaking change is a `minor`.
+- The next version is the highest existing tag, raised by the part you choose (`scripts/version.mjs`). Tags that are not exactly `vX.Y.Z`, such as old `-rc.N` tags, are ignored.
+- The notes are one line per commit since the previous tag: its subject and short SHA. A squash merge's subject is the PR title, so a good PR title is a good release note. The same text is the tag's message.
+- A tag is annotated, made by the workflow as `github-actions[bot]`, and never moved or deleted. A ruleset forbids it. A wrong release is replaced by the next version.
+- Only people with write access to the repository can run *Release new version* and *Promote to production*. *Release new version* runs only from `main` and refuses when there is no new commit.
 
-When a run fails, it reads the log and matches it to [When a run fails](#when-a-run-fails).
+## Search engines
 
-## Steps for developers
+A site that is not meant to be found must never be indexed, so the rule is built into the deploy and no setting can switch it off:
 
-What you do yourself, in order. [From PR to production](#from-pr-to-production) says what each workflow does. The `release` skill (`.agents/skills/release/SKILL.md`) runs the same steps with an agent, and asks before every tag, promotion and rollback ([Release with the agent](#release-with-the-agent)). Use these commands when you work without one.
+- **Only `production`, and only with `ROBOTS_INDEX=true`, is indexable.** The Environment is the one the workflow deploys to (`PLATFORM_ENVIRONMENT`). A variable of the GitHub Environment cannot change it, and a missing or unknown name counts as not production.
+- **Every other deploy, `dev` and `staging` always, and `production` until it is public,** gets: the header `X-Robots-Tag: noindex, nofollow` on every response, `<meta name="robots" content="noindex, nofollow">` on every page, a `robots.txt` with `Disallow: /`, and no sitemap (`sitemap-index.xml` and `sitemap-N.xml` are deleted). `ROBOTS_INDEX=true` on `dev` or `staging` is ignored, and the deploy log says so.
+- **An indexable production** keeps the built `robots.txt` and sitemap, and is noindex only on its `*.pages.dev` address.
 
-### Ship a change to `dev`
+The same build runs everywhere, so the files differ only at deploy: `scripts/write-config.mjs` makes the change, `pnpm test` proves it (`scripts/write-config.test.mjs` and `scripts/check-noindex.mjs` on the real build), and the script is a `platform` file that a product never edits.
 
-1. Branch from `main`, commit, and open a PR to `main`.
-2. Wait for the check `ci / ci`: `gh pr checks <pr> --watch`.
-3. A code owner approves, and you squash-merge.
-4. `deploy.yml` runs on the merge commit. Watch it: `gh run list --workflow deploy.yml --branch main --limit 1`, then `gh run watch <run id>`.
-5. Check the change in `dev`. The address of each Environment comes from the platform team with the Environment.
+## Where the staging version is kept
 
-### Release to `test` or `staging`
+Every deploy is a GitHub deployment of its Environment, made by `pages-deploy.yml` with the task `deploy:pages` and the version as its ref: a commit for dev, a tag for staging and production. *Promote to production* reads the newest `deploy:pages` deployment of `staging`, checks that it succeeded and that its ref is a tag `vX.Y.Z`, and promotes that tag. GitHub's own deployments for the jobs (task `deploy`) are ignored.
 
-1. Pick the commit on `main` to release. Its `deploy.yml` run must have passed: `release.yml` builds nothing and refuses a commit that is not on `main` or has no images.
-2. Choose the version. Raise `X` for a change that breaks something for users, `Y` for a new feature, `Z` for a fix. A release candidate is `vX.Y.Z-rc.<n>`: it reaches the `release` tier but can never be promoted to `prod`.
-3. Tag the commit and push the tag:
+See them with `pnpm status`, under **Deployments** on the repository page, or:
 
-   ```bash
-   git tag -a v1.2.0 <commit> -m "v1.2.0"
-   git push origin v1.2.0
-   ```
+```bash
+gh api "repos/{owner}/{repo}/deployments?environment=staging&task=deploy:pages&per_page=5" --jq '.[] | [.ref, .created_at] | @tsv'
+```
 
-4. Watch `release.yml` (`gh run list --workflow release.yml --limit 1`, then `gh run watch <run id>`). It creates the GitHub Release and deploys to every `release` tier Environment.
-5. Check the release there. Whoever accepts the content does it in this Environment.
+## Steps
 
-A tag is never moved or deleted once it is pushed. A wrong release is replaced by the next version.
+### Ship a change to dev
 
-### Promote to `prod`
+1. Branch from `main`, commit, run `pnpm test` and `pnpm test:a11y`, and open a PR.
+2. `ci / ci` passes, a code owner approves, and you squash-merge.
+3. *Deploy to dev* runs on the merge: `gh run watch $(gh run list --workflow deploy-dev.yml --limit 1 --json databaseId --jq '.[0].databaseId')`.
+4. Check the change on the dev address.
 
-Only when the repository has a `prod` Environment and `promote.yml`, which the platform team adds before the first production Environment.
+### Release to staging
 
-1. The version must run, healthy, in a `release` tier Environment (`test` or `staging`). Check: `gh api "repos/{owner}/{repo}/deployments?environment=staging&per_page=1" --jq '.[0].ref'`.
-2. Run the promotion: `gh workflow run promote.yml -f version=v1.2.0 -f environment=prod`.
-3. A reviewer of the `prod` Environment approves the waiting job on GitHub.
-4. Watch the run and check production.
+1. Check dev: it runs the newest commit of `main`, which is what will be released.
+2. Run *Release new version* in the Actions tab, or `gh workflow run release.yml -f bump=patch` (or `minor`, `major`).
+3. When it succeeds, *Deploy to staging* starts by itself. Watch it: `gh run list --workflow deploy-staging.yml --limit 1`.
+4. Check the release on the staging address. Whoever accepts the content does it here.
+
+### Promote to production
+
+1. `pnpm status` shows the version staging runs. That is the version that will be promoted.
+2. Run *Promote to production* in the Actions tab, or `gh workflow run promote.yml`.
+3. A reviewer of the `production` Environment approves the waiting job on GitHub. Nobody approves their own run.
+4. Check production.
 
 ### Roll back
 
-- **`prod`:** promote the previous version, the same way as in [Promote to `prod`](#promote-to-prod). No image is rebuilt.
-- **`dev` and the `release` tier:** fix forward. Revert the change on `main` through a PR, then tag a new version if the `release` tier needs it.
+- **production:** in the Cloudflare dashboard, the project's **Deployments**, roll back to the previous production deployment. It takes effect at once and rebuilds nothing. Then fix forward: merge the fix, release, and promote again.
+- **dev and staging:** fix forward. Revert the change on `main` through a PR; release again if staging needs it.
 
 ### When a run fails
 
-- **`ci / ci` fails:** the PR can't merge. Read the failed steps with `gh run view <run id> --log-failed`. A Trivy finding is fixed or accepted in `.trivyignore` ([Images](#images)); a value above a cap is lowered in `platform.yaml` or the cap is raised ([`platform.yaml` and the caps](#platformyaml-and-the-caps), [Asking for more](#asking-for-more)).
-- **`deploy.yml`, `release.yml` or `promote.yml` fails:** the Environment stays on the version it had. Read the log, fix, and merge, tag or promote again.
-- **The new revision never becomes ready:** its `/readyz` did not answer. Run the image locally and check `/readyz` before you try again.
-- **`promote.yml` refuses the version:** it does not run healthy in a `release` tier Environment, or it is a release candidate.
-- **Sign-in, a missing Environment or a cap:** ask the platform team.
-
-### What runs where
-
-`dev` runs the newest commit of `main`: each merge deploys it, and no tag is made. Every `release` and `prod` tier Environment runs a tag `vX.Y.Z`. Every deploy is a GitHub deployment of its Environment, so the version is visible in three places:
-
-| Where | What it shows |
+| Failure | Cause and fix |
 | --- | --- |
-| `release status`, through the agent | Each Environment, the commit or tag it runs, and when it was deployed |
-| **Deployments** on the repository page, also under each Environment | The history of each Environment: every deploy, its commit or tag, and the workflow run that made it |
-| **Releases** on the repository page | Every version tag with its notes. Only the `release` and `prod` tiers run these |
+| `ci / ci` | Read `gh run view <run id> --log-failed`; fix and push |
+| *Release new version*: "the tag exists already" or "nothing to release" | Someone released at the same time, or there is no commit since the last tag |
+| *Deploy to staging*: "has no site-vX.Y.Z.zip" | The newest tag was not made by *Release new version*; release a new version |
+| *Promote to production*: "did not succeed" | The newest staging deploy failed; run *Deploy to staging* again first |
+| "the Environment … has no variable …", or a Cloudflare authentication error | The Environment is not set up; ask the platform team ([Set up and tear down](#set-up-and-tear-down)) |
 
-From the command line:
+A failed deploy leaves the Environment on the version it had: Pages switches only when an upload is complete.
 
-```bash
-gh api "repos/{owner}/{repo}/deployments?per_page=20" --jq '.[] | [.environment, .ref, .created_at] | @tsv'
-```
+## Set up and tear down
+
+The Pages project, the hostnames, DNS, Access, the GitHub Environments and their settings are declared in `tl-cloud-infrastructure`, so they are created, changed and removed by a reviewed PR there, never by hand.
+
+| Part | Where | Holds |
+| --- | --- | --- |
+| Pages project `<repository>` | Cloudflare | Direct Upload, production branch `production`, custom domain: the production address |
+| DNS | The site's zone | The dev and staging addresses as proxied CNAMEs to `dev.<repository>.pages.dev` and `staging.<repository>.pages.dev` |
+| Access | Cloudflare Zero Trust | An application per hostname above, and Pages' access policy for previews and the `pages.dev` addresses |
+| GitHub Environments `dev`, `staging`, `production` | This repository | Variables `CLOUDFLARE_ACCOUNT_ID`, `PAGES_PROJECT`, `SITE_URL` and any `PUBLIC_*`, and secret `CLOUDFLARE_API_TOKEN`; `production` has required reviewers and prevents self-review |
+| Tag ruleset `v*` | This repository | No update, no deletion |
+
+The token may only edit Pages (`Cloudflare Pages: Edit`); it has no DNS or zone rights. Cloudflare cannot limit it to one project, so it is kept only in the Environments, and production deploys need a reviewer.
+
+**Making the site public:** add the site's domain (and the `www` redirect) to the Pages project, set `SITE_URL` to the site's address and `ROBOTS_INDEX` to `true` on the `production` Environment, remove the Access application of production, and turn the production address into a permanent redirect to the site's domain. Then promote again so the robots files change. `url` in `src/site.config.ts` must already be the site's address, so no rebuild is needed. `ROBOTS_INDEX` has an effect only on `production`: see [Search engines](#search-engines).
+
+**Tearing it down:** a PR in `tl-cloud-infrastructure` removes the site's entries. Its apply deletes the custom domains, DNS records, Access applications, the Pages project with all its deployments, the GitHub Environments with their variables and secret, and revokes the token. The repository is archived, not deleted, so its name is never reused. To retire one Environment, remove only its entries.

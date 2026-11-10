@@ -1,0 +1,53 @@
+name: Promote to production
+
+# By hand: deploys the version staging runs to production, with the same files.
+# The version is the newest deployment recorded for staging by Deploy to
+# staging, and it must have succeeded. The production Environment's reviewers
+# approve the deploy before it starts (docs/deployment.md).
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  staging:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      deployments: read
+    outputs:
+      version: ${{ steps.staging.outputs.version }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Find the version staging runs
+        id: staging
+        run: |
+          deployment=$(gh api "repos/$GH_REPO/deployments?environment=staging&task=deploy:pages&per_page=1" --jq '.[0] // empty')
+          if [ -z "$deployment" ]; then
+            echo "::error::staging has no deployment yet: run Release new version first"; exit 1
+          fi
+          id=$(jq -r .id <<< "$deployment")
+          version=$(jq -r .ref <<< "$deployment")
+          if ! gh api "repos/$GH_REPO/deployments/$id/statuses" --jq '[.[].state] | index("success")' | grep -q '^[0-9]'; then
+            echo "::error::the newest deploy of $version to staging did not succeed; deploy to staging again first"; exit 1
+          fi
+          if ! [[ $version =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::staging runs $version, which is not a release vX.Y.Z"; exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Promoting **$version**, which staging runs, to production." >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    needs: staging
+    permissions:
+      contents: read
+      deployments: write
+    uses: ./.github/workflows/pages-deploy.yml
+    with:
+      environment: production
+      version: ${{ needs.staging.outputs.version }}
+      source: release
+    secrets: inherit

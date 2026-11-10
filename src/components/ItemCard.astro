@@ -1,0 +1,27 @@
+---
+// An item in a list: title, summary and a link to its page.
+import type { CollectionEntry } from "astro:content";
+import { localizedPath, t, type Lang } from "../i18n";
+import { entrySlug } from "../lib/content";
+import type { ItemCollection } from "../lib/items";
+
+interface Props {
+  entry: CollectionEntry<ItemCollection>;
+  collection: ItemCollection;
+  lang: Lang;
+  // The card's heading level: one below the heading of the list it is in.
+  level?: 2 | 3;
+}
+
+const { entry, collection, lang, level = 3 } = Astro.props;
+const Heading = `h${level}` as const;
+const href = localizedPath(lang, `/${collection}/${entrySlug(entry)}`);
+---
+
+<li>
+  <article class="card">
+    <Heading><a href={href}>{entry.data.title}</a></Heading>
+    <p>{entry.data.summary}</p>
+    <a class="more" href={href} aria-hidden="true" tabindex="-1">{t(lang, "cta.readMore")} →</a>
+  </article>
+</li>

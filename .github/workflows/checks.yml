@@ -1,0 +1,111 @@
+name: checks
+
+# The steps of the check `ci / ci`, called by ci.yml: template manifest, type
+# check, lint, unit tests, build, the checks on the built site (among them the
+# browser check, which needs Chromium), then accessibility (pa11y-ci) and
+# Lighthouse CI (docs/getting-started.md, docs/quality-checks.md).
+#
+# On a PR, scripts/ci-scope.mjs picks the steps from the files it changes, so a
+# docs-only PR is done in seconds and a content page is checked on its own
+# pages. The job always runs and always reports, so the required check never
+# waits. A push to main runs every step.
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  ci:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      ASTRO_TELEMETRY_DISABLED: 1
+    steps:
+      # Depth 2: on a PR, HEAD is the merge commit and HEAD^1 is main.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      - name: What to check
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+            git diff --name-only --no-renames HEAD^1 HEAD | node scripts/ci-scope.mjs
+          else
+            node scripts/ci-scope.mjs --all
+          fi
+
+      - if: ${{ steps.scope.outputs.any == 'true' }}
+        uses: ./.github/actions/setup
+
+      # The version that matches playwright in pnpm-lock.yaml, with the system
+      # libraries it needs. Only the browser check uses it.
+      - if: ${{ steps.scope.outputs.built == 'true' }}
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The steps of `pnpm test`, one by one so each can be skipped.
+      - name: Template manifest
+        if: ${{ steps.scope.outputs.template == 'true' }}
+        run: pnpm run check:template
+
+      - name: Types and content (astro check)
+        if: ${{ steps.scope.outputs.types == 'true' }}
+        run: pnpm exec astro check
+
+      - name: Lint
+        if: ${{ steps.scope.outputs.lint == 'true' }}
+        run: pnpm run lint
+
+      - name: Unit tests
+        if: ${{ steps.scope.outputs.unit == 'true' }}
+        run: pnpm run test:unit
+
+      - name: Build
+        id: build
+        if: ${{ steps.scope.outputs.build == 'true' }}
+        run: pnpm exec astro build
+
+      - name: Checks on the built site
+        if: ${{ steps.scope.outputs.built == 'true' }}
+        run: pnpm run check:built
+
+      # Accessibility and Lighthouse on dist/, served as Cloudflare Pages
+      # serves it (docs/quality-checks.md). They are steps of this job, so
+      # `ci / ci` fails with them. Both run once dist/ is built, even when
+      # the other one fails. QUALITY_PAGES limits them to the pages a content
+      # change shows on; empty means every page.
+
+      # pa11y-ci, WCAG 2 AA, the pages of the sitemap. Also runs locally.
+      - name: Accessibility (pa11y-ci)
+        if: ${{ !cancelled() && steps.scope.outputs.a11y == 'true' && steps.build.outcome == 'success' }}
+        run: pnpm test:a11y
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          QUALITY_PAGES: ${{ steps.scope.outputs.pages }}
+
+      # Lighthouse CI (LHCI): scores and Core Web Vitals limits of
+      # lighthouserc.json. Runs on GitHub only, where the limits are set.
+      - name: Lighthouse CI
+        if: ${{ !cancelled() && steps.scope.outputs.lighthouse == 'true' && steps.build.outcome == 'success' }}
+        run: node scripts/quality.mjs lighthouse
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          QUALITY_PAGES: ${{ steps.scope.outputs.pages }}
+
+      - name: Keep the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: quality-reports
+          path: |
+            .quality/pa11y.json
+            .quality/lighthouse/
+            .quality/lighthouse.md
+          if-no-files-found: ignore
+          retention-days: 14

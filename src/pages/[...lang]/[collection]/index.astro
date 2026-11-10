@@ -1,0 +1,22 @@
+---
+import ContactCta from "../../../components/ContactCta.astro";
+import ItemCard from "../../../components/ItemCard.astro";
+import { type Lang } from "../../../i18n";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { collectionPaths, collectionSettings, sortedItems, type ItemCollection } from "../../../lib/items";
+
+export const getStaticPaths = collectionPaths;
+
+const { lang, collection } = Astro.props as { lang: Lang; collection: ItemCollection };
+const settings = collectionSettings(collection);
+const items = await sortedItems(collection, lang);
+---
+
+<BaseLayout title={settings.title[lang]} description={settings.lead[lang]} lang={lang}>
+  <h1>{settings.title[lang]}</h1>
+  <p class="lead">{settings.lead[lang]}</p>
+  <ul class="grid">
+    {items.map((entry) => <ItemCard entry={entry} collection={collection} lang={lang} level={2} />)}
+  </ul>
+  <ContactCta lang={lang} />
+</BaseLayout>

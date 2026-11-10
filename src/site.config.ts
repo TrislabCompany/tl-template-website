@@ -1,8 +1,8 @@
 // The site's own facts, read at build time: languages, company, contact,
-// legal pages, structured data and security.txt. Change the values here; the
-// shape is in src/lib/site-settings.ts. Nothing here is secret: it all ends up
-// in the public pages. Values that differ per Environment go to /config.json
-// instead (src/lib/config.ts).
+// legal pages, lists of items, structured data and security.txt. Change the
+// values here; the shape is in src/lib/site-settings.ts. Nothing here is
+// secret: it all ends up in the public pages. Values that differ per
+// Environment go to /config.json instead (src/lib/config.ts).
 
 import type { SiteSettings } from "./lib/site-settings";
 
@@ -19,6 +19,19 @@ const site: SiteSettings<Lang> = {
   },
   languages,
   defaultLanguage: "en",
+  themeColor: "#2457c5",
+
+  // Lists of items kept as Markdown: src/content/<id>/<language>/<name>.md.
+  // Each id also needs a collection in src/content.config.ts.
+  collections: [
+    {
+      id: "services",
+      title: { en: "Services", sl: "Storitve" },
+      lead: { en: "A sample list of items, kept as Markdown files.", sl: "Vzorčen seznam elementov, shranjenih kot datoteke Markdown." },
+      nav: true,
+      home: true,
+    },
+  ],
 
   company: {
     name: "Example",
@@ -38,7 +51,7 @@ const site: SiteSettings<Lang> = {
     mapUrl: "https://www.openstreetmap.org/search?query=Ljubljana",
   },
 
-  legalPages: { imprint: true, privacy: true, accessibility: true },
+  legalPages: { imprint: true, privacy: true, accessibility: true, sustainability: true },
 
   structuredData: "Organization",
 

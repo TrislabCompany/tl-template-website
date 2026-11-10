@@ -1,9 +1,8 @@
 ---
 title: Politika zasebnosti
 description: Kako ta stran ravna z osebnimi podatki.
-updated: 2026-11-04
 ---
 
-**Vzorčno besedilo.** To datoteko zamenjajte s politiko zasebnosti iz skupnega pravnega paketa Trislab.
+**Vzorčno besedilo.** To datoteko zamenjajte s politiko zasebnosti, ki je napisana za to stran in jo je pregledal pravnik.
 
 Ta stran ne nastavlja piškotkov in ne nalaga zunanjih storitev.

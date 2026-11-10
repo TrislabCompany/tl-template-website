@@ -2,6 +2,7 @@
 import { localizedPath, t, type Lang } from "../i18n";
 import site from "../site.config";
 import EnvironmentBadge from "./EnvironmentBadge.astro";
+import Logo from "./Logo.astro";
 
 interface Props {
   lang: Lang;
@@ -12,19 +13,34 @@ const legal = [
   { on: site.legalPages.imprint, href: "/imprint", label: t(lang, "legal.imprint") },
   { on: site.legalPages.privacy, href: "/privacy", label: t(lang, "legal.privacy") },
   { on: site.legalPages.accessibility, href: "/accessibility", label: t(lang, "legal.accessibility") },
+  { on: site.legalPages.sustainability, href: "/sustainability", label: t(lang, "legal.sustainability") },
+  { on: true, href: "/sitemap", label: t(lang, "legal.sitemap") },
 ].filter((link) => link.on);
+const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-  <span>{t(lang, "footer.builtFrom")}</span>
-  {
-    legal.length > 0 && (
-      <nav class="legal-links" aria-label={t(lang, "legal.nav")}>
-        {legal.map(({ href, label }) => (
-          <a href={localizedPath(lang, href)}>{label}</a>
-        ))}
-      </nav>
-    )
-  }
-  <EnvironmentBadge />
+  <div class="wrap footer-row">
+    <div class="footer-about">
+      <a class="brand" href={localizedPath(lang)}>
+        <Logo size={28} />
+        <span>{site.name}</span>
+      </a>
+      <p>{site.description[lang]}</p>
+      <p>{t(lang, "footer.noCookies")}</p>
+    </div>
+    {
+      legal.length > 0 && (
+        <nav class="legal-links" aria-label={t(lang, "legal.nav")}>
+          {legal.map(({ href, label }) => (
+            <a href={localizedPath(lang, href)}>{label}</a>
+          ))}
+        </nav>
+      )
+    }
+  </div>
+  <div class="wrap footer-row footer-bottom">
+    <span>© {year} {site.company.legalName}. {t(lang, "footer.rights")}</span>
+    <EnvironmentBadge />
+  </div>
 </footer>

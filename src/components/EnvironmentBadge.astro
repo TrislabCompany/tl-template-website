@@ -1,16 +1,29 @@
 ---
-// Shows the Environment the container runs in, read from /config.json in the
-// browser. The same image runs in every Environment.
+// Shows the Environment the site runs in, read from /config.json in the
+// browser. The same build runs in every Environment. The badge ships hidden and
+// is shown only when the Environment is known and is not production. A
+// production deploy takes the element and its script out of every page
+// (scripts/write-config.mjs), so production pages load no JavaScript at all.
+// It also shows the version that runs: the release tag, "Environment: staging
+// (v0.3.2)", or the short commit on dev, "Environment: dev (e428622)".
+// With `pnpm dev` there is no /config.json, and it shows "local".
 ---
 
-<span class="environment" data-environment>Environment: local</span>
+<span class="environment" data-environment hidden></span>
 
 <script>
   import { loadConfig } from "../lib/config";
 
   const config = await loadConfig();
-  const environment = config.PLATFORM_ENVIRONMENT ?? "local";
-  document.querySelectorAll("[data-environment]").forEach((element) => {
-    element.textContent = `Environment: ${environment}`;
+  const environment = config.PLATFORM_ENVIRONMENT ?? (import.meta.env.DEV ? "local" : undefined);
+  document.querySelectorAll<HTMLElement>("[data-environment]").forEach((element) => {
+    if (!environment || environment === "production" || environment === "prod") {
+      element.remove();
+      return;
+    }
+    const version = config.PLATFORM_VERSION?.trim();
+    const shown = version && /^[0-9a-f]{40}$/.test(version) ? version.slice(0, 7) : version;
+    element.textContent = shown ? `Environment: ${environment} (${shown})` : `Environment: ${environment}`;
+    element.hidden = false;
   });
 </script>

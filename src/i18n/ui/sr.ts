@@ -1,0 +1,40 @@
+import type { UiStrings } from "./en";
+
+// Serbian in the Latin script.
+const sr: UiStrings = {
+  "nav.home": "Početna",
+  "nav.about": "O nama",
+  "nav.contact": "Kontakt",
+  "nav.main": "Glavna navigacija",
+  "nav.skip": "Preskoči na sadržaj",
+  "language.switch": "Jezik",
+  "cta.contact": "Kontaktirajte nas",
+  "cta.readMore": "Saznajte više",
+  "cta.heading": "Zanima vas?",
+  "cta.text": "Pišite nam i javićemo vam se.",
+  "footer.noCookies": "Ovaj sajt ne koristi kolačiće.",
+  "footer.rights": "Sva prava zadržana.",
+  "legal.nav": "Pravne informacije",
+  "legal.imprint": "Impresum",
+  "legal.privacy": "Politika privatnosti",
+  "legal.accessibility": "Izjava o pristupačnosti",
+  "legal.sustainability": "Održivost",
+  "legal.sitemap": "Mapa sajta",
+  "imprint.company": "Kompanija",
+  "imprint.address": "Adresa",
+  "imprint.registrationNumber": "Matični broj",
+  "imprint.vatId": "PDV identifikacioni broj",
+  "imprint.contact": "Kontakt",
+  "contact.title": "Kontakt",
+  "contact.lead": "Za saradnju ili upit pišite nam direktno.",
+  "contact.address": "Adresa",
+  "contact.email": "E-pošta",
+  "contact.phone": "Telefon",
+  "contact.map": "Otvori u Google Mapama",
+  "contact.googleBusiness": "Naš Google Business profil",
+  "notFound.title": "Stranica nije pronađena",
+  "notFound.text": "Stranica koju tražite ne postoji.",
+  "notFound.home": "Na početnu stranicu",
+};
+
+export default sr;

@@ -1,0 +1,451 @@
+/* The layout and components of the site. Colours, radius and font come from
+   tokens.css (the brand): this file uses their names and holds no colour of
+   its own. */
+
+:root {
+  color-scheme: light;
+  font-family: var(--font-family);
+  line-height: 1.6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent-text);
+}
+
+a:focus-visible,
+.button:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 3px;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw + 1rem, 3.25rem);
+  margin: 0 0 1rem;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 2vw + 1rem, 2rem);
+}
+
+.wrap {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+/* Text pages (legal, imprint, detail pages) read better narrow. */
+.prose {
+  max-width: 46rem;
+}
+
+.lead {
+  font-size: 1.125rem;
+  color: var(--muted);
+  max-width: 46rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--accent-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Header */
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
+.header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--text);
+  font-size: 1.125rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.main-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin-left: auto;
+}
+
+.main-nav a {
+  color: var(--text);
+  text-decoration: none;
+  padding: 0.25rem 0;
+}
+
+.main-nav a:hover,
+.main-nav a[aria-current="page"] {
+  color: var(--accent-text);
+}
+
+.main-nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+}
+
+.language-switch {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.language-switch a {
+  /* At least 24 × 24 px to tap (WCAG 2.2, 2.5.8 Target Size). */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.language-switch a:hover {
+  color: var(--text);
+}
+
+.language-switch [aria-current] {
+  color: var(--text);
+  font-weight: 650;
+}
+
+@media (max-width: 52rem) {
+  .main-nav {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .language-switch {
+    margin-left: auto;
+  }
+}
+
+/* Footer */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.footer-about {
+  max-width: 28rem;
+}
+
+.footer-about p {
+  margin: 0.5rem 0 0;
+}
+
+.legal-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legal-links a {
+  color: var(--muted);
+}
+
+.legal-links a:hover {
+  color: var(--text);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+/* Buttons */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.7rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.button:hover {
+  background: var(--accent-text);
+}
+
+.button.secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.button.secondary:hover {
+  border-color: var(--text);
+}
+
+/* Sections and cards */
+
+.section {
+  margin-top: 4rem;
+}
+
+.section > h2 {
+  margin: 0 0 0.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.card :is(h2, h3) {
+  margin: 0.25rem 0 0;
+  font-size: 1.125rem;
+}
+
+.card :is(h2, h3) a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.card :is(h2, h3) a:hover {
+  color: var(--accent-text);
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.card .icon {
+  color: var(--accent);
+}
+
+.card .more {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  font-weight: 600;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tags li {
+  padding: 0.125rem 0.625rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.checklist {
+  padding-left: 1.25rem;
+}
+
+.checklist li::marker {
+  color: var(--accent);
+}
+
+
+
+
+.hero {
+  padding: 2.5rem 0 1rem;
+  max-width: 52rem;
+}
+
+.cta-box {
+  margin-top: 4rem;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.cta-box h2 {
+  margin: 0 0 0.5rem;
+}
+
+.cta-box p {
+  margin: 0;
+  color: var(--muted);
+}
+
+
+
+
+
+
+.facts,
+.imprint {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.5rem 1.5rem;
+  margin: 1.5rem 0;
+}
+
+/* On a narrow screen the terms go above their values, so long terms such as
+   "Registration number" never push the page wider than the screen. */
+@media (max-width: 30rem) {
+  .imprint {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .imprint dd + dt {
+    margin-top: 0.75rem;
+  }
+}
+
+.imprint dd {
+  overflow-wrap: anywhere;
+}
+
+.facts dt,
+.imprint dt {
+  color: var(--muted);
+}
+
+.facts dd,
+.imprint dd {
+  margin: 0;
+}
+
+time {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.environment {
+  opacity: 0.8;
+}
+
+/* The first link on every page: hidden until it gets keyboard focus, then it
+   jumps past the header to the main content (WCAG 2.4.1). */
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: var(--radius);
+  font-weight: 600;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+main:focus {
+  outline: none;
+}
+
+/* Tables in Markdown content, such as the figures on the sustainability page. */
+main table {
+  width: 100%;
+  max-width: 46rem;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+}
+
+main th,
+main td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+main th {
+  color: var(--muted);
+  font-weight: 600;
+}

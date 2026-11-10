@@ -22,9 +22,9 @@ The template's `template-manifest.yaml` gives every path one ownership. An updat
 
 | Ownership | For example | What an update does | You |
 | --- | --- | --- | --- |
-| `platform` | `.github/workflows/*`, `platform.schema.json`, `renovate.json`, `docker-entrypoint.d/`, `CLAUDE.md`, the skills `release` and `update-from-template`, this page | Replaces the file with the template's | Don't edit it; ask the platform team for a change in the template |
-| `shared` | `AGENTS.md` outside its template block, `.agents/rules/`, the rest of `docs/`, `Dockerfile`, `nginx/`, `package.json` | Merges the template's change into your file and lists every conflict | Adapt it as you need; resolve the listed conflicts in the PR |
-| `product` | `src/`, content, `README.md`, `platform.yaml`, `CODEOWNERS`, `.trivyignore` | Nothing; the template's change is shown in the PR as a suggestion | Yours |
+| `platform` | `.github/workflows/*`, `.github/actions/`, `renovate.json`, `CLAUDE.md`, the deploy-time scripts (`scripts/write-config.mjs`, `version.mjs`, `status.mjs`), the skills `release` and `update-from-template`, this page | Replaces the file with the template's | Don't edit it; ask the platform team for a change in the template |
+| `shared` | `AGENTS.md` outside its template block, `.agents/rules/`, the rest of `docs/`, the other scripts, `public/_headers`, `astro.config.mjs`, `package.json` | Merges the template's change into your file and lists every conflict | Adapt it as you need; resolve the listed conflicts in the PR |
+| `product` | `src/`, content, `README.md`, `CODEOWNERS`, `pnpm-lock.yaml` | Nothing; the template's change is shown in the PR as a suggestion | Yours |
 | `template-only` | The template's release skill and notes | Never copied | — |
 
 ## Your own skills
@@ -37,6 +37,6 @@ When a template release adds a skill with the name of one of yours, the update s
 
 - Titled `chore(template): template-<type>/vX.Y.Z`. It brings one minor version (with its patches) and bumps `.template-version`.
 - Its body lists the changes by ownership, the conflicts, the suggestions for your files, and the upgrade steps done or left to you.
-- `ci / ci` must pass, as on every PR. Review it like any other change; a deploy follows the merge.
+- `ci / ci` must pass, as on every PR. Review it like any other change; the merge deploys to dev, and the change reaches production with the next release and promotion.
 - The canary repository takes each release first. Other repositories follow once the canary's update is merged and deployed.
 - From roadmap phase 15, Renovate opens these PRs from `.template-version`. Until then the platform team opens them, or you run the skill: ask your coding agent to "update from the template".
