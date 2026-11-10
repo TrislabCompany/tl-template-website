@@ -15,7 +15,8 @@ permissions: {}
 
 jobs:
   latest:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # A template repository deploys nowhere; a repository made from it does.
+    if: (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') && !github.event.repository.is_template
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:

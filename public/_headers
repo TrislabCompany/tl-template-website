@@ -4,8 +4,7 @@
 #
 # Different rules that match a path add their headers together, so set each
 # header in one rule only. Two rules with the same path don't add up: only the
-# last counts. At deploy, scripts/write-config.mjs puts
-# X-Robots-Tag: noindex, nofollow into the rule /* (docs/deployment.md).
+# last counts.
 #
 # "! Access-Control-Allow-Origin" removes the header Pages adds by default:
 # no other site needs to read these files.

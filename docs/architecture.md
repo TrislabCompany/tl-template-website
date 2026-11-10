@@ -32,9 +32,8 @@ flowchart LR
 | Routing | `/en/about` serves `en/about.html` and `/en` serves `en.html` (`build.format: "file"` in `astro.config.mjs`). An address ending in `/` or `.html` is redirected (308) to the one without. `/` is a small page that leads to the default language. A path with no file serves `404.html` with status 404 |
 | Caching | Files under `/_astro/` have a hash in their name and are cached for a year. Every other file is checked again on each visit. `/config.json` is never cached |
 | Security headers | `Content-Security-Policy` (scripts, styles and images only from the site itself), `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy` on every answer, and no `Access-Control-Allow-Origin` |
-| Search engines | Closed everywhere except a public production: header, meta tag, `robots.txt` and no sitemap ([deployment.md](deployment.md#search-engines)), and always the header on the `pages.dev` addresses |
 
-`public/_headers` holds the headers and caching; `scripts/write-config.mjs` adds the robots header, and the other search-engine files, at deploy. Two rules in `_headers` with the same path don't add up (only the last counts), so keep one rule `/*`. Astro writes styles and scripts to files, never inline (`astro.config.mjs`), so the Content-Security-Policy needs no `'unsafe-inline'`. If you add a third-party script, font or image, add its origin to the policy.
+`public/_headers` holds the headers and caching; `scripts/write-config.mjs` is not changed at deploy. Two rules in `_headers` with the same path don't add up (only the last counts), so keep one rule `/*`. Astro writes styles and scripts to files, never inline (`astro.config.mjs`), so the Content-Security-Policy needs no `'unsafe-inline'`. If you add a third-party script, font or image, add its origin to the policy.
 
 Check routing and headers locally with `wrangler pages dev` ([getting-started.md](getting-started.md)).
 

@@ -12,6 +12,8 @@ permissions: {}
 
 jobs:
   staging:
+    # A template repository deploys nowhere; a repository made from it does.
+    if: ${{ !github.event.repository.is_template }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
