@@ -12,7 +12,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "test": "pnpm run check:template && astro check && pnpm run lint && pnpm run test:unit && astro build && pnpm run check:built",
-    "check:built": "node scripts/check-page-weight.mjs && node scripts/check-security-txt.mjs && node scripts/check-claims.mjs && node scripts/check-noindex.mjs && node scripts/check-browser.mjs",
+    "check:built": "node scripts/check-page-weight.mjs && node scripts/check-security-txt.mjs && node scripts/check-claims.mjs && node scripts/check-browser.mjs",
     "check:template": "node scripts/check-template-manifest.mjs",
     "lint": "eslint .",
     "test:unit": "node --test \"scripts/*.test.mjs\"",

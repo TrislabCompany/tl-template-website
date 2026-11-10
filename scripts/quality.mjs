@@ -4,12 +4,13 @@
 //   node scripts/quality.mjs lighthouse   (on GitHub only)
 //
 // It serves a copy of dist/ set up as production (scripts/write-config.mjs:
-// /config.json, the robots header) with `wrangler pages dev`, so public/_headers
+// /config.json) with `wrangler pages dev`, so public/_headers
 // (the Content-Security-Policy among them) applies as on Cloudflare Pages, then runs:
 //   - pa11y-ci (axe + HTML_CodeSniffer, WCAG 2 AA) on every URL of the sitemap, settings in .pa11yci.json
 //   - Lighthouse CI on the pages in lighthouserc.json, with the score and Core Web Vitals limits there
 // Reports go to .quality/. QUALITY_BASE_URL checks a running site instead of serving dist/.
 // QUALITY_PAGES (space-separated paths, from scripts/ci-scope.mjs) checks only those pages.
+// QUALITY_PORT serves dist/ on another port than 8788, when that one is taken.
 
 import { spawn } from "node:child_process";
 import { appendFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -17,7 +18,7 @@ import { isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const OUT = ".quality";
-const PORT = 8788;
+const PORT = Number(process.env.QUALITY_PORT ?? 8788);
 const SITE = `${OUT}/site`;
 
 /** The <loc> URLs of a sitemap. */
@@ -149,7 +150,7 @@ async function stop(child) {
 async function prepareSite() {
   rmSync(SITE, { recursive: true, force: true });
   cpSync("dist", SITE, { recursive: true });
-  const env = { ...process.env, PLATFORM_ENVIRONMENT: "production", ROBOTS_INDEX: "true", VARS_JSON: "" };
+  const env = { ...process.env, PLATFORM_ENVIRONMENT: "production", VARS_JSON: "" };
   if ((await run("node", ["scripts/write-config.mjs", SITE], env)) !== 0) throw new Error("quality: write-config.mjs failed.");
 }
 

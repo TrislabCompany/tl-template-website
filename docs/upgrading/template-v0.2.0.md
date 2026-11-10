@@ -19,7 +19,7 @@ Yes, for repositories on v0.1.x. The hosting changes: the image, `nginx/`, `plat
 
 - **`.github/workflows/`**: `deploy.yml` is removed. New: `ci.yml` (replaced), `checks.yml`, `deploy-dev.yml`, `deploy-staging.yml`, `pages-deploy.yml`, `release.yml` (replaced) and `promote.yml`. No workflow uses `tl-platform` any more.
 - **`.github/actions/setup/`**: Node 22, pnpm from `packageManager`, the dependencies from the lock file.
-- **`scripts/write-config.mjs`, `scripts/check-noindex.mjs`** and tests: the deploy-time settings and the **search-engine rule**: only `production` with `ROBOTS_INDEX=true` is indexable. Every other deploy gets `X-Robots-Tag: noindex, nofollow` on every response, a robots meta tag on every page, `robots.txt` with `Disallow: /` and no sitemap, whatever the variables say. The Environment is the one the workflow deploys to, never a variable. `scripts/check-noindex.mjs` proves it on the real build.
+- **`scripts/write-config.mjs`** and its tests: the deploy-time settings: `config.json` from the `PLATFORM_*` and `PUBLIC_*` settings, and the environment badge taken out of production. The Environment is the one the workflow deploys to, never a variable. The variable `ROBOTS_INDEX` is **no longer read**: `robots.txt`, the sitemap and the headers are the same in every Environment, and `dev` and `staging` are protected by Cloudflare Access, which the infrastructure enforces. The infrastructure repository may still set `ROBOTS_INDEX` on the GitHub Environments; it has no effect and can be removed there.
 - **`scripts/version.mjs`, `version.test.mjs`, `status.mjs`**: the release versions and `pnpm status`.
 - **`renovate.json`**: self-contained (weekly, pinned, 3 days old at least, grouped).
 - **`.agents/skills/release/`, `.claude/skills/release/`**: rewritten. The release is the *Release new version* workflow, not a tag a person pushes. Commands: `release status`, `release deploy`, `release new`, `release promote`, `release rollback`.
@@ -32,6 +32,7 @@ Yes, for repositories on v0.1.x. The hosting changes: the image, `nginx/`, `plat
 - **`package.json`**: Astro 7.3.3, Wrangler, Playwright, axe-core, pa11y-ci, Lighthouse CI, `@fontsource-variable/inter`, and the scripts `check:built`, `test:a11y` and `status`. The lock file is regenerated.
 - **`astro.config.mjs`**: `build.format: "file"`, and a 301 from `/` to the default language through `dist/_redirects`. Addresses have no trailing slash.
 - **`public/_headers`**: the security headers and caching of Cloudflare Pages.
+- **`scripts/co2-estimate.mjs`** and its tests: the `--azure-kg`, `--azure-period` and `--azure-source` options are removed; the yearly note is the web part only (Sustainable Web Design v4, CO2.js).
 - **`scripts/`**: `quality.mjs`, `ci-scope.mjs`, `check-browser.mjs`, `check-claims.mjs` and their tests.
 - **`.pa11yci.json`, `lighthouserc.json`**: the accessibility and Lighthouse checks. The Lighthouse URLs are the sample pages: change them with the pages.
 - **`eslint.config.js`, `.gitignore`**: ignore `.wrangler/`, `.quality/` and `.lighthouseci/`.
@@ -49,6 +50,7 @@ Shown as a suggestion only.
 - **`BaseLayout.astro`:** Open Graph and Twitter metadata, a theme colour from the settings, a skip link, `main#main`.
 - **`robots.txt.ts`:** blocks AI training crawlers; `EnvironmentBadge.astro`: hidden by default, never in production, shows the version; `config.ts`.
 - **i18n:** interface-only packs for Croatian, Italian and Serbian; `ogLocale()` in `src/i18n/index.ts`; the interface strings no longer hold page copy.
+- **Privacy sample text** names Cloudflare as the processor that serves the site and keeps technical logs, with a placeholder to adapt.
 - **Legal pages** show no date: the `updated` field is removed from the `legal` schema and the sample texts.
 - **`README.md`:** rewritten for Pages; the mention of `docs/co2/` is removed.
 - **`.github/CODEOWNERS`**: unchanged.

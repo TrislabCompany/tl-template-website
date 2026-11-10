@@ -39,8 +39,7 @@ test("the CI itself and unknown files run everything", () => {
   assert.deepEqual(checksFor("something-new.yaml").checks, CHECKS);
 });
 
-test("write-config and check-noindex run the check on the built site", () => {
-  assert.deepEqual(on(scope(["scripts/check-noindex.mjs"])), ["lint", "unit", "build", "built"]);
+test("write-config runs every check that sees its output", () => {
   assert.deepEqual(on(scope(["scripts/write-config.mjs"])), ["lint", "unit", "build", "built", "a11y", "lighthouse"]);
 });
 

@@ -17,7 +17,7 @@
   const config = await loadConfig();
   const environment = config.PLATFORM_ENVIRONMENT ?? (import.meta.env.DEV ? "local" : undefined);
   document.querySelectorAll<HTMLElement>("[data-environment]").forEach((element) => {
-    if (!environment || environment === "production" || environment === "prod") {
+    if (!environment || environment === "production") {
       element.remove();
       return;
     }

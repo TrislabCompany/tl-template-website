@@ -54,11 +54,11 @@ export function checksFor(file, { prefixed = true } = {}) {
   if (SITE.test(file) || SITE_FILES.includes(file)) return { checks: CHECKS };
   if (file === "eslint.config.js") return { checks: ["lint"] };
   if (file === ".template-version" || file === "scripts/check-template-manifest.mjs") return { checks: ["template", "lint", "unit"] };
-  if (/^scripts\/check-(page-weight|security-txt|claims|browser|noindex)\.mjs$/.test(file) || file === "page-weight.config.json") {
+  if (/^scripts\/check-(page-weight|security-txt|claims|browser)\.mjs$/.test(file) || file === "page-weight.config.json") {
     return { checks: ["lint", "unit", "build", "built"] };
   }
   if (file === "scripts/quality.mjs") return { checks: ["lint", "unit", "build", "a11y", "lighthouse"] };
-  // write-config.mjs prepares every deploy and the copy quality.mjs serves; check-noindex.mjs runs it on the build.
+  // write-config.mjs prepares every deploy and the copy quality.mjs serves.
   if (file === "scripts/write-config.mjs") return { checks: ["lint", "unit", "build", "built", "a11y", "lighthouse"] };
   if (file === ".pa11yci.json") return { checks: ["build", "a11y"] };
   if (file === "lighthouserc.json") return { checks: ["build", "lighthouse"] };
