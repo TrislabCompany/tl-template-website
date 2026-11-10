@@ -1,0 +1,44 @@
+# A second sample site.yaml, valid against site.schema.json: one language that is
+# not English, a list with a hyphen in its id, one legal page off and no optional
+# company data. The CI job "template-init" runs it besides sample-site.yaml: a
+# one-language site has no language prefix in its addresses and no language switch.
+name: Esempio
+domain: esempio.example
+repo: ExampleOrg/example-website-one-language
+github_team: example-one-language
+
+template:
+  version: v0.4.0
+  commit: "0000000000000000000000000000000000000000"
+
+languages: [it]
+
+description:
+  it: Un sito di prova con una sola lingua.
+
+company:
+  name: Esempio
+  legal_name: Esempio S.r.l.
+  address:
+    street: Via Esempio 1
+    postal_code: "34100"
+    city: Trieste
+    country: IT
+
+contact:
+  topics:
+    - email: info@esempio.example
+      label: { it: Informazioni generali }
+  security_email: security@esempio.example
+
+legal_pages:
+  accessibility: false
+
+structured_data: LocalBusiness
+
+collections:
+  - id: news-items
+    title: { it: Novità }
+    lead: { it: Cosa c'è di nuovo. }
+    nav: false
+    home: false

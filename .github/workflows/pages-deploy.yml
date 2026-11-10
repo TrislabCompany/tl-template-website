@@ -9,10 +9,10 @@ name: pages-deploy
 #                   tag `version`, built once by release.yml, so staging and
 #                   production get the same files.
 #
-# Only dist/config.json and the robots header differ between Environments
-# (scripts/write-config.mjs). config.json carries PLATFORM_ENVIRONMENT and
-# PLATFORM_VERSION (the tag, or the commit for dev), which the environment badge
-# shows. The Environment holds the variable
+# Only dist/config.json, and in production the missing environment badge,
+# differ between Environments (scripts/write-config.mjs). config.json carries
+# PLATFORM_ENVIRONMENT and PLATFORM_VERSION (the tag, or the commit for dev),
+# which the environment badge shows. The Environment holds the variable
 # CLOUDFLARE_ACCOUNT_ID, PAGES_PROJECT and SITE_URL, the secret
 # CLOUDFLARE_API_TOKEN, and any PUBLIC_* setting.
 #

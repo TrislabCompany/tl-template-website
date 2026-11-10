@@ -11,9 +11,35 @@ on:
 permissions: {}
 
 jobs:
+  # A repository made from the template deploys nothing until its first PR,
+  # `pnpm init-site`, has written .template-version (docs/getting-started.md#a-new-site).
+  initialised:
+    if: ${{ !github.event.repository.is_template }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    outputs:
+      done: ${{ steps.check.outputs.done }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Is the repository initialised?
+        id: check
+        run: |
+          if [ -f .template-version ]; then
+            echo "done=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "done=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipped: this repository is not initialised yet (no .template-version). Merge the init PR first."
+          fi
+
   deploy:
-    # A template repository deploys nowhere; a repository made from it does.
-    if: github.ref == 'refs/heads/main' && !github.event.repository.is_template
+    needs: initialised
+    # A template repository deploys nowhere; neither does a repository whose init PR is not merged.
+    if: github.ref == 'refs/heads/main' && !github.event.repository.is_template && needs.initialised.outputs.done == 'true'
     permissions:
       contents: read
       deployments: write

@@ -3,8 +3,11 @@
 #   platform       copied over the product's file on every update; the product never edits it
 #   shared         the template's change is 3-way merged into the product's file; conflicts are listed
 #   product        never touched; the template's change is shown as a suggestion
-#   template-only  never copied to a product repository
+#   template-only  never copied to a product repository; `pnpm init-site` deletes it
+#   sample         the template's sample content: shown in the template, deleted by `pnpm init-site`,
+#                  never copied to a product repository (docs/template-releases.md)
 # The first rule whose pattern matches a path wins. `*` matches within one folder, `**` across folders.
+# So the rules of a narrower class come before `.github/workflows/*`, `scripts/**`, `src/**` and the others.
 # `pnpm test` fails when a tracked file matches no rule (scripts/check-template-manifest.mjs).
 template: template-website
 
@@ -20,11 +23,22 @@ skills:
 paths:
   # Maintaining the template itself
   - { path: template-manifest.yaml, ownership: template-only }
+  # The init script and its input: `pnpm init-site` runs once, in the repository's first PR, and removes them
+  - { path: site.schema.json, ownership: template-only }
+  - { path: site.yaml, ownership: template-only }
+  - { path: scripts/init-site.mjs, ownership: template-only }
+  - { path: scripts/init-site.test.mjs, ownership: template-only }
+  - { path: scripts/init/**, ownership: template-only }
   - { path: .agents/skills/release-template/**, ownership: template-only }
   - { path: .claude/skills/release-template/**, ownership: template-only }
   - { path: docs/template-releases.md, ownership: template-only }
   - { path: docs/upgrading/template-*.md, ownership: template-only }
   - { path: .github/workflows/template-release.yml, ownership: template-only }
+  - { path: .github/workflows/template-init.yml, ownership: template-only }
+
+  # The sample content: it makes the template a working site, and is deleted at init.
+  # A site's own lists are written by init-site from `collections` in site.yaml.
+  - { path: src/content/services/**, ownership: sample }
 
   # The platform's part: the same in every product repository, never edited there.
   # The workflows and the deploy-time scripts are what the release process rests on.

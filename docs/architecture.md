@@ -9,7 +9,7 @@ The site is plain files. Astro turns the pages and the Markdown content into HTM
 | The build | `pnpm build` runs Astro on Node 22 and writes `dist/`: one HTML file per page and language, the styles, scripts and fonts under `/_astro/`, the sitemap, `robots.txt`, `security.txt` and `_headers` |
 | Cloudflare Pages | The project `<repository>` serves `dist/` from Cloudflare's edge. There is no server, container or process of the site's own to run, scale or patch |
 
-A release is built once, by *Release new version*, and the same files go to staging and production. Only `/config.json` and the robots header are written per Environment, at deploy ([deployment.md](deployment.md)).
+A release is built once, by *Release new version*, and the same files go to staging and production. Only `/config.json` is written per Environment, at deploy (and in production the environment badge is taken out of the pages) ([deployment.md](deployment.md)).
 
 ## 2. Request path
 

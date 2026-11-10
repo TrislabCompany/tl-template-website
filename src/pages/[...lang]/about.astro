@@ -13,10 +13,7 @@ const { lang } = Astro.props as { lang: Lang };
   <div class="prose">
     <h1>{t(lang, "nav.about")}</h1>
     <p class="lead">{site.description[lang]}</p>
-    <p>
-      This sample page is <code>src/pages/[...lang]/about.astro</code>. Replace its text with the site's own, in every
-      language, or move it to Markdown in <code>src/content/</code>.
-    </p>
+    {/* Sample page: replace the text above with the site's own, in every language, or move it to Markdown in src/content/. */}
   </div>
   <ContactCta lang={lang} />
 </BaseLayout>

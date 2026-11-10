@@ -18,7 +18,8 @@
     "test:unit": "node --test \"scripts/*.test.mjs\"",
     "test:a11y": "node scripts/quality.mjs a11y",
     "co2": "node scripts/co2-estimate.mjs",
-    "status": "node scripts/status.mjs"
+    "status": "node scripts/status.mjs",
+    "init-site": "node scripts/init-site.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
@@ -31,6 +32,7 @@
     "@eslint/js": "10.0.1",
     "@lhci/cli": "0.16.0",
     "@tgwf/co2": "0.19.0",
+    "ajv": "8.20.0",
     "eslint": "10.13.0",
     "eslint-plugin-astro": "3.2.1",
     "globals": "17.13.0",

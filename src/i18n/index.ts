@@ -7,6 +7,7 @@
 // "/" (astro.config.mjs).
 
 import site, { languages, type Lang } from "../site.config";
+import de from "./ui/de";
 import en, { type UiKey, type UiStrings } from "./ui/en";
 import hr from "./ui/hr";
 import it from "./ui/it";
@@ -18,7 +19,7 @@ export const defaultLanguage: Lang = site.defaultLanguage;
 
 /** Add a file to ui/ and a line here for each new language. A language not in
  * src/site.config.ts may stay here; it is never used. */
-const ui: Record<Lang, UiStrings> & Record<string, UiStrings> = { en, sl, hr, it, sr };
+const ui: Record<Lang, UiStrings> & Record<string, UiStrings> = { en, sl, hr, it, sr, de };
 
 /** True when the URLs carry a language prefix. */
 export const prefixed = languages.length > 1;
@@ -67,7 +68,7 @@ const territory: Record<string, string> = {
 export function locale(lang: Lang): string {
   // Serbian is written in the Latin script on this site.
   if ((lang as string) === "sr") return "sr-Latn";
-  return lang === "en" ? "en-GB" : lang;
+  return (lang as string) === "en" ? "en-GB" : lang;
 }
 
 /** The Open Graph locale, language_TERRITORY: "en_GB", "sl_SI". A code not in the list above repeats itself ("xx_XX"): add it there. */

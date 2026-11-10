@@ -8,7 +8,7 @@ Every commit pushed to a PR, and every push to `main`, runs the required check `
 | Accessibility, `pnpm test:a11y` | GitHub and locally | pa11y-ci on every page |
 | Lighthouse CI | **GitHub only** | Lighthouse scores and Core Web Vitals |
 
-Both checks run once `dist/` is built, even if the other one fails, so one CI run reports everything. `scripts/quality.mjs` runs both of them. It copies `dist/` to `.quality/site`, sets the copy up as production with `scripts/write-config.mjs` (`/config.json`, the robots header), and serves it with `wrangler pages dev` on port 8788. So `public/_headers` applies, the Content-Security-Policy among them, as on Cloudflare Pages.
+Both checks run once `dist/` is built, even if the other one fails, so one CI run reports everything. `scripts/quality.mjs` runs both of them. It copies `dist/` to `.quality/site`, sets the copy up as production with `scripts/write-config.mjs` (`/config.json`, no environment badge), and serves it with `wrangler pages dev` on port 8788. So `public/_headers` applies, the Content-Security-Policy among them, as on Cloudflare Pages.
 
 ## What runs for a PR
 

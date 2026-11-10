@@ -1,0 +1,90 @@
+name: template-init
+
+# Tests the init path on every change to the template: copies the repository to a
+# temporary folder, runs `pnpm init-site` there with each sample site.yaml
+# (scripts/init/sample-site*.yaml), installs again and runs `pnpm test` and
+# `pnpm test:a11y` on the result. So a change that breaks the init script, or
+# that the script's output can't build, fails here before a release carries it
+# to the next site (docs/getting-started.md#a-new-site).
+# Template-only: never copied to a product repository, and deleted by the init
+# script like the other template-only files.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: template-init-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  init:
+    name: init (${{ matrix.sample }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Several languages with lists, and one language without a prefix.
+        sample: [sample-site.yaml, sample-site-one-language.yaml]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      ASTRO_TELEMETRY_DISABLED: 1
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: 0
+    defaults:
+      run:
+        working-directory: /tmp/init-site
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          path: template
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      # What the platform does for a new repository: a copy of main's files, no history.
+      - name: Copy the template
+        working-directory: ${{ github.workspace }}/template
+        run: |
+          mkdir -p /tmp/init-site
+          git ls-files -z | xargs -0 cp --parents -t /tmp/init-site
+          cp "scripts/init/$SAMPLE" /tmp/init-site/site.yaml
+        env:
+          SAMPLE: ${{ matrix.sample }}
+
+      - name: Install pnpm and the dependencies (the script needs them)
+        run: |
+          corepack enable
+          corepack install --global "$(jq -r .packageManager package.json)"
+          pnpm install --frozen-lockfile
+
+      - name: Initialise
+        run: pnpm init-site
+
+      - name: Nothing of the template is left
+        run: |
+          for path in site.yaml site.schema.json template-manifest.yaml scripts/init scripts/init-site.mjs src/content/services/en; do
+            if [ -e "$path" ]; then echo "::error::$path is still there after init-site"; exit 1; fi
+          done
+          cat .template-version
+
+      # What the first PR's checks do, and what a developer does next.
+      - name: Install again (the lock file must still match package.json)
+        run: pnpm install --frozen-lockfile
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - name: Test
+        run: pnpm test
+
+      - name: Accessibility (pa11y-ci)
+        run: pnpm test:a11y
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

@@ -1,0 +1,17 @@
+// The site's own facts, read at build time: languages, company, contact,
+// legal pages, lists of items, structured data and security.txt. Change the
+// values here; the shape is in src/lib/site-settings.ts. Nothing here is
+// secret: it all ends up in the public pages. Values that differ per
+// Environment go to /config.json instead (src/lib/config.ts).
+// First written by `pnpm init-site` from site.yaml; from then on it is the
+// site's own.
+
+import type { SiteSettings } from "./lib/site-settings";
+
+/** The site's languages. With one language, the URLs have no language prefix. */
+export const languages = {{languages}} as const;
+export type Lang = (typeof languages)[number];
+
+const site: SiteSettings<Lang> = {{settings}};
+
+export default site;
