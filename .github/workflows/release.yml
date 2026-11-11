@@ -98,9 +98,11 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      # The Chromium that matches playwright in pnpm-lock.yaml, with the system
-      # libraries it needs. The browser check in pnpm test uses it.
-      - run: pnpm exec playwright install --with-deps chromium
+      # The Chromium that matches playwright in pnpm-lock.yaml. The browser check
+      # in pnpm test uses it. No --with-deps: the runner's Google Chrome already
+      # has the system libraries it needs, so a release doesn't depend on
+      # Ubuntu's package mirror.
+      - run: pnpm exec playwright install chromium
 
       # pnpm test ends with astro build: dist/ is the site that is released.
       - name: Test and build

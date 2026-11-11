@@ -63,3 +63,4 @@ The `release-template` skill does these steps:
 | `v0.2.0` | yes (Container Apps to Cloudflare Pages) | the Pages project and the GitHub Environments `dev`, `staging`, `production` with their variables and secret | [template-v0.2.0.md](upgrading/template-v0.2.0.md) |
 | `v0.3.0` | yes (`ROBOTS_INDEX` no longer read, `--azure-*` options of `co2-estimate` removed) | nothing new beyond v0.2.0 | [template-v0.3.0.md](upgrading/template-v0.3.0.md) |
 | `v0.4.0` | no | nothing new | [template-v0.4.0.md](upgrading/template-v0.4.0.md) |
+| `v0.5.0` | no | nothing new | [template-v0.5.0.md](upgrading/template-v0.5.0.md) |

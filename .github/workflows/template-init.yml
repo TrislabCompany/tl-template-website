@@ -79,7 +79,8 @@ jobs:
       - name: Install again (the lock file must still match package.json)
         run: pnpm install --frozen-lockfile
 
-      - run: pnpm exec playwright install --with-deps chromium
+      # No --with-deps, as in checks.yml: the runner's Chrome has the libraries.
+      - run: pnpm exec playwright install chromium
 
       - name: Test
         run: pnpm test
