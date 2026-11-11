@@ -8,7 +8,9 @@
 //    is data, not code, and is allowed. A site that sets `analytics`
 //    (docs/analytics.md) runs exactly one script, Analytics.astro's; then the
 //    Content-Security-Policy's connect-src in public/_headers must allow its
-//    endpoint, and the privacy policy of every language must name Plausible.
+//    endpoint, and the privacy policy of every language must name the provider
+//    ("Plausible", or "Cloudflare Web Analytics", whose beacon script's origin
+//    script-src must allow too).
 // 2. The published footprint (sustainability page, every language): the
 //    average page weight and the CO2e per page view must match the build,
 //    within the rounding the page uses. When the check fails, update the
@@ -41,6 +43,17 @@ export function analyticsEndpoint(html) {
   return html.match(/<meta\s+name="analytics"[^>]*\bdata-endpoint="([^"]+)"/i)?.[1];
 }
 
+/** The provider, endpoint and beacon script (Cloudflare only) a page's analytics tag names, or undefined without analytics. */
+export function analyticsOf(html) {
+  const tag = html.match(/<meta\s+name="analytics"[^>]*>/i)?.[0];
+  if (!tag) return undefined;
+  const attr = (name) => tag.match(new RegExp(`\\bdata-${name}="([^"]*)"`))?.[1];
+  return { provider: attr("provider"), endpoint: attr("endpoint"), beacon: attr("beacon") };
+}
+
+/** The name a provider's privacy-policy text must carry. */
+export const PROVIDER_NAMES = { plausible: "Plausible", cloudflare: "Cloudflare Web Analytics" };
+
 const ANALYTICS_SCRIPT = /\bsrc="\/_astro\/Analytics\.astro_[^"]*"/;
 
 /** The scripts a production page runs that no claim allows: all but JSON-LD, and the analytics script when the page has analytics. */
@@ -49,11 +62,16 @@ export function unexpectedScripts(html) {
   return scriptsIn(html).filter((tag) => !(analytics && ANALYTICS_SCRIPT.test(tag)));
 }
 
+/** The sources a Content-Security-Policy directive allows in a _headers file, for the rule of every path (/*). */
+export function directiveSources(headers, name) {
+  const csp = headers.match(/^\s*Content-Security-Policy:\s*(.+)$/im)?.[1] ?? "";
+  const directive = csp.split(";").map((part) => part.trim()).find((part) => part.startsWith(`${name} `));
+  return directive ? directive.split(/\s+/).slice(1) : [];
+}
+
 /** The sources connect-src allows in a _headers file, for the rule of every path (/*). */
 export function connectSources(headers) {
-  const csp = headers.match(/^\s*Content-Security-Policy:\s*(.+)$/im)?.[1] ?? "";
-  const directive = csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("connect-src "));
-  return directive ? directive.split(/\s+/).slice(1) : [];
+  return directiveSources(headers, "connect-src");
 }
 
 /** The figures in a sustainability page: the first "<n> KB" and "<n> g CO₂e" in its text. */
@@ -72,24 +90,38 @@ async function main() {
     .filter((entry) => entry.isFile() && entry.name.endsWith(".html"))
     .map((entry) => join(entry.parentPath, entry.name));
   const endpoints = new Set();
+  const beacons = new Set();
+  const providers = new Set();
   for (const file of files) {
     const html = withoutBadge(await readFile(file, "utf8"));
     const scripts = unexpectedScripts(html);
     if (scripts.length > 0) failures.push(`${file.slice(dist.length)} runs a script in production: ${scripts[0]}`);
     const endpoint = analyticsEndpoint(html);
     if (endpoint) endpoints.add(endpoint);
+    const analytics = analyticsOf(html);
+    if (analytics?.provider) providers.add(analytics.provider);
+    if (analytics?.beacon) beacons.add(analytics.beacon);
   }
 
   const legal = join(rootDir, "src", "content", "legal");
   if (endpoints.size > 0) {
-    const allowed = connectSources(await readFile(join(rootDir, "public", "_headers"), "utf8"));
+    const headers = await readFile(join(rootDir, "public", "_headers"), "utf8");
+    const allowed = connectSources(headers);
+    const allowedScripts = directiveSources(headers, "script-src");
+    for (const beacon of beacons) {
+      const origin = new URL(beacon).origin;
+      if (!allowedScripts.includes(origin)) failures.push(`analytics loads a script from ${origin}, which script-src in public/_headers doesn't allow; add it there`);
+    }
     for (const endpoint of endpoints) {
       const origin = new URL(endpoint).origin;
       if (!allowed.includes(origin)) failures.push(`analytics sends to ${origin}, which connect-src in public/_headers doesn't allow; add it there`);
     }
     for (const lang of await readdir(legal)) {
       const text = await readFile(join(legal, lang, "privacy.md"), "utf8").catch(() => undefined);
-      if (text !== undefined && !/Plausible/.test(text)) failures.push(`${lang}/privacy.md doesn't name Plausible, which counts the visits (docs/analytics.md)`);
+      for (const provider of providers) {
+        const name = PROVIDER_NAMES[provider] ?? provider;
+        if (text !== undefined && !text.includes(name)) failures.push(`${lang}/privacy.md doesn't name ${name}, which counts the visits (docs/analytics.md)`);
+      }
     }
   }
 

@@ -65,6 +65,8 @@ paths:
   - { path: src/components/seo/**, ownership: shared }
   # The opt-in visit counts (docs/analytics.md), rendered only when the site sets `analytics`.
   - { path: src/components/analytics/**, ownership: shared }
+  # The opt-in Turnstile challenge for a form (docs/forms.md); no page uses it by default.
+  - { path: src/components/forms/**, ownership: shared }
 
   # The product's own from the first day
   - { path: README.md, ownership: product }

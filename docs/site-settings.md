@@ -88,7 +88,7 @@ The JSON-LD is an inline `<script type="application/ld+json">`. Browsers never r
 
 ### Visit counts
 
-`analytics` switches on cookieless visit counts with Plausible, on the production domain only. It also needs an origin in `public/_headers` and a sentence in the privacy policy: [analytics.md](analytics.md).
+`analytics` switches on cookieless visit counts with Plausible or Cloudflare Web Analytics, on the production domain only. It also needs origins in `public/_headers` and a sentence in the privacy policy: [analytics.md](analytics.md).
 
 ## 6. security.txt
 

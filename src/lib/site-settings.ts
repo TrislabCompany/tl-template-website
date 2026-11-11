@@ -95,18 +95,26 @@ export interface SiteSettings<L extends string> {
   structuredData: "Organization" | "LocalBusiness" | "none";
 
   /**
-   * Cookieless visit counts with Plausible Analytics, off when left out
-   * (docs/analytics.md). Counts only on the production domain. When set, add
-   * the endpoint's origin to connect-src in public/_headers and say so in the
+   * Cookieless visit counts, off when left out (docs/analytics.md). Counts only
+   * on the production domain. When set, add the provider's origins to the
+   * Content-Security-Policy in public/_headers and name the provider in the
    * privacy policy of every language: pnpm test checks both.
    */
-  analytics?: {
-    provider: "plausible";
-    /** The site's name in Plausible; by default the host of `url` without "www.". */
-    domain?: string;
-    /** Where events go; by default https://plausible.io/api/event. */
-    endpoint?: string;
-  };
+  analytics?:
+    | {
+        /** Plausible Analytics: page views and the event "Contact". */
+        provider: "plausible";
+        /** The site's name in Plausible; by default the host of `url` without "www.". */
+        domain?: string;
+        /** Where events go; by default https://plausible.io/api/event. */
+        endpoint?: string;
+      }
+    | {
+        /** Cloudflare Web Analytics: page views and Core Web Vitals, no custom events. */
+        provider: "cloudflare";
+        /** The site token from the infrastructure repository (public, like a site key). */
+        token: string;
+      };
 
   /** /.well-known/security.txt (RFC 9116). */
   securityTxt: {
