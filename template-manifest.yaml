@@ -63,6 +63,8 @@ paths:
   # Shared parts of src/: the search tags and fields (docs/search-engines.md). A
   # release merges its changes in, so SEO fixes reach every site without a hand edit.
   - { path: src/components/seo/**, ownership: shared }
+  # The opt-in visit counts (docs/analytics.md), rendered only when the site sets `analytics`.
+  - { path: src/components/analytics/**, ownership: shared }
 
   # The product's own from the first day
   - { path: README.md, ownership: product }

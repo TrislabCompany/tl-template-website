@@ -86,6 +86,10 @@ The JSON-LD is an inline `<script type="application/ld+json">`. Browsers never r
 
 `shareImage` is the picture shown when a page is shared: an imported photo, cropped to 1200 × 630 at build, with what it shows in every language. The search tags of every page, the sitemap, the search fields of an item and Google Search Console are in [search-engines.md](search-engines.md).
 
+### Visit counts
+
+`analytics` switches on cookieless visit counts with Plausible, on the production domain only. It also needs an origin in `public/_headers` and a sentence in the privacy policy: [analytics.md](analytics.md).
+
 ## 6. security.txt
 
 `/.well-known/security.txt` (RFC 9116) tells security researchers where to report a problem. It is built from `securityTxt`: a role mailbox or URL as the contact, and an expiry date at most a year ahead. It also lists the site's languages and its own address.
