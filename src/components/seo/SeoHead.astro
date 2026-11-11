@@ -1,0 +1,67 @@
+---
+// The tags search engines and social networks read, for one page: description,
+// title, canonical address, language alternates, Open Graph and the share
+// image. BaseLayout.astro includes it once, in <head>.
+//
+// This folder is `shared` in template-manifest.yaml: a template release merges
+// its changes into the site, so put the site's own tags in the layout, not
+// here (docs/search-engines.md).
+import { getImage } from "astro:assets";
+import { defaultLanguage, languages, localizedPath, ogLocale, unlocalizedPath, type Lang } from "../../i18n";
+import site from "../../site.config";
+import type { ShareImage } from "./types";
+
+interface Props {
+  /** The page's title; the site's name is added after it. */
+  title: string;
+  /** The page's description; by default the site's. */
+  description?: string;
+  lang: Lang;
+  /** The languages this page exists in; by default all of them. */
+  available?: readonly Lang[];
+  /** Leave the page out of search engines and out of the sitemap. */
+  noindex?: boolean;
+  /** The picture shown when the page is shared; by default the site's (shareImage in src/site.config.ts). */
+  image?: ShareImage;
+}
+
+const { title, description = site.description[Astro.props.lang], lang, available = languages, noindex = false, image = site.shareImage } = Astro.props;
+
+// The page without its language prefix, for the alternates.
+const path = unlocalizedPath(Astro.url.pathname);
+const absolute = (target: Lang) => new URL(localizedPath(target, path), site.url).toString();
+const alternates = available.length > 1 ? available : [];
+const fullTitle = title === site.name ? title : `${title} | ${site.name}`;
+
+// Social networks show a picture of 1200 × 630 pixels (1.91:1). The image is
+// cropped to that size at build, as a JPEG, so any photo can be given.
+const SHARE = { width: 1200, height: 630 };
+const share = image && (await getImage({ src: image.src, ...SHARE, fit: "cover", format: "jpg" }));
+const shareAlt = image && (typeof image.alt === "string" ? image.alt : image.alt[lang]);
+if (image && !shareAlt) throw new Error(`The share image of "${title}" (${lang}) has no alt text.`);
+---
+
+<meta name="description" content={description} />
+{noindex && <meta name="robots" content="noindex" />}
+<title>{fullTitle}</title>
+{!noindex && <link rel="canonical" href={absolute(lang)} />}
+{!noindex && alternates.map((other) => <link rel="alternate" hreflang={other} href={absolute(other)} />)}
+{!noindex && alternates.includes(defaultLanguage) && <link rel="alternate" hreflang="x-default" href={absolute(defaultLanguage)} />}
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={site.name} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={absolute(lang)} />
+<meta property="og:locale" content={ogLocale(lang)} />
+{alternates.filter((other) => other !== lang).map((other) => <meta property="og:locale:alternate" content={ogLocale(other)} />)}
+{
+  share && (
+    <>
+      <meta property="og:image" content={new URL(share.src, site.url).toString()} />
+      <meta property="og:image:width" content={String(SHARE.width)} />
+      <meta property="og:image:height" content={String(SHARE.height)} />
+      <meta property="og:image:alt" content={shareAlt} />
+    </>
+  )
+}
+<meta name="twitter:card" content={share ? "summary_large_image" : "summary"} />

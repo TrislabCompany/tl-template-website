@@ -1,5 +1,6 @@
 import { glob } from "astro/loaders";
 import { defineCollection, z } from "astro:content";
+import { seoFields } from "./components/seo/fields";
 
 // Content is kept per language: src/content/<collection>/<language>/<name>.md.
 // The same file name in two languages is the same item translated; its id is
@@ -10,16 +11,19 @@ import { defineCollection, z } from "astro:content";
 // here and an entry in `collections` in src/site.config.ts, under the same id.
 // To add another list (news, products, cases…), copy this block, give it its
 // id, add it to `collections` below and to src/site.config.ts. Add fields to
-// the schema as the items need them: a date, an image, a category.
+// the schema as the items need them: a date, an image, a category. The search
+// fields (a search title, a share image, noindex) are in seoFields.
 const services = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/services" }),
-  schema: z.object({
-    title: z.string(),
-    summary: z.string(),
-    /** Position in lists, lowest first. */
-    order: z.number().int(),
-    tags: z.array(z.string()).default([]),
-  }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      summary: z.string(),
+      /** Position in lists, lowest first. */
+      order: z.number().int(),
+      tags: z.array(z.string()).default([]),
+      ...seoFields(image),
+    }),
 });
 
 // The texts of the privacy policy, the accessibility statement and the

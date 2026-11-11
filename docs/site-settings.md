@@ -82,6 +82,10 @@ Every page carries the company as JSON-LD (schema.org): `Organization`, or `Loca
 
 The JSON-LD is an inline `<script type="application/ld+json">`. Browsers never run a script of that type, so the Content-Security-Policy (`script-src 'self'`) doesn't block it and needs no change.
 
+### Share image and search
+
+`shareImage` is the picture shown when a page is shared: an imported photo, cropped to 1200 × 630 at build, with what it shows in every language. The search tags of every page, the sitemap, the search fields of an item and Google Search Console are in [search-engines.md](search-engines.md).
+
 ## 6. security.txt
 
 `/.well-known/security.txt` (RFC 9116) tells security researchers where to report a problem. It is built from `securityTxt`: a role mailbox or URL as the contact, and an expiry date at most a year ahead. It also lists the site's languages and its own address.

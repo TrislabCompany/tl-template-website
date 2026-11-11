@@ -1,6 +1,7 @@
 ---
 import { render, type CollectionEntry } from "astro:content";
 import ContactCta from "../../../components/ContactCta.astro";
+import { seoProps } from "../../../components/seo/fields";
 import { localizedPath, type Lang } from "../../../i18n";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import { collectionSettings, itemPaths, type ItemCollection } from "../../../lib/items";
@@ -17,7 +18,7 @@ const settings = collectionSettings(collection);
 const { Content } = await render(entry);
 ---
 
-<BaseLayout title={entry.data.title} description={entry.data.summary} lang={lang} available={available}>
+<BaseLayout {...seoProps(entry.data)} description={entry.data.summary} lang={lang} available={available}>
   <article class="prose">
     <p class="eyebrow"><a href={localizedPath(lang, `/${collection}`)}>{settings.title[lang]}</a></p>
     <h1>{entry.data.title}</h1>

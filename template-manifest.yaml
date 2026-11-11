@@ -39,6 +39,7 @@ paths:
   # The sample content: it makes the template a working site, and is deleted at init.
   # A site's own lists are written by init-site from `collections` in site.yaml.
   - { path: src/content/services/**, ownership: sample }
+  - { path: src/assets/sample/**, ownership: sample }
 
   # The platform's part: the same in every product repository, never edited there.
   # The workflows and the deploy-time scripts are what the release process rests on.
@@ -58,6 +59,10 @@ paths:
   - { path: scripts/status.mjs, ownership: platform }
   - { path: scripts/check-template-manifest.mjs, ownership: platform }
   - { path: scripts/check-template-manifest.test.mjs, ownership: platform }
+
+  # Shared parts of src/: the search tags and fields (docs/search-engines.md). A
+  # release merges its changes in, so SEO fixes reach every site without a hand edit.
+  - { path: src/components/seo/**, ownership: shared }
 
   # The product's own from the first day
   - { path: README.md, ownership: product }

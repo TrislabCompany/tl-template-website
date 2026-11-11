@@ -4,6 +4,7 @@
 // secret: it all ends up in the public pages. Values that differ per
 // Environment go to /config.json instead (src/lib/config.ts).
 
+import shareImage from "./assets/sample/share.jpg";
 import type { SiteSettings } from "./lib/site-settings";
 
 /** The site's languages. With one language, the URLs have no language prefix. */
@@ -19,6 +20,10 @@ const site: SiteSettings<Lang> = {
   },
   languages,
   defaultLanguage: "en",
+  shareImage: {
+    src: shareImage,
+    alt: { en: "The name of the website template on a blue background", sl: "Ime predloge spletne strani na modri podlagi" },
+  },
   themeColor: "#2457c5",
 
   // Lists of items kept as Markdown: src/content/<id>/<language>/<name>.md.
