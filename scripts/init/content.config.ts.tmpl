@@ -1,5 +1,6 @@
 import { glob } from "astro/loaders";
 import { defineCollection, z } from "astro:content";
+import { seoFields } from "./components/seo/fields";
 
 // Content is kept per language: src/content/<collection>/<language>/<name>.md.
 // The same file name in two languages is the same item translated; its id is
@@ -11,6 +12,7 @@ import { defineCollection, z } from "astro:content";
 // the same id. To add another list (news, products, cases...), copy a block,
 // give it its id, add it to `collections` below and to src/site.config.ts. Add
 // fields to the schema as the items need them: a date, an image, a category.
+// The search fields (a search title, a share image, noindex) are in seoFields.
 {{items}}
 // The texts of the privacy policy, the accessibility statement and the
 // sustainability page: src/content/legal/<language>/privacy.md,

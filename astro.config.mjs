@@ -2,6 +2,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import sitemap from "@astrojs/sitemap";
 import { defineConfig } from "astro/config";
+import { sitemapWithoutNoindex, withDefaultLanguage } from "./src/components/seo/sitemap.mjs";
 import site, { languages } from "./src/site.config";
 
 // With two or more languages every page lives under its language (/en,
@@ -47,15 +48,19 @@ export default defineConfig({
   redirects: prefixed ? { "/": `/${site.defaultLanguage}` } : {},
   integrations: [
     rootRedirect,
-    // sitemap-index.xml with every page in every language, and the other
-    // languages of each page as alternates.
+    // sitemap-index.xml with every page in every language, the other
+    // languages of each page and x-default as alternates, as in each page's
+    // head. Pages marked noindex are taken out after it (docs/search-engines.md).
     sitemap({
       filter: (page) => !(prefixed && page === root),
       // Same addresses as the canonical links: no trailing slash.
       serialize: (item) => ({
         ...item,
         url: canonical(item.url),
-        links: item.links?.map((link) => ({ ...link, url: canonical(link.url) })),
+        links: withDefaultLanguage(
+          item.links?.map((link) => ({ ...link, url: canonical(link.url) })),
+          site.defaultLanguage,
+        ),
       }),
       i18n: prefixed
         ? {
@@ -64,6 +69,7 @@ export default defineConfig({
           }
         : undefined,
     }),
+    sitemapWithoutNoindex(site.url),
   ],
   build: {
     // Styles and scripts go to files under /_astro/, never inline, so the

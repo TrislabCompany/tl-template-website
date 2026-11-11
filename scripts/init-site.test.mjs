@@ -230,5 +230,5 @@ test("init: --dry-run lists what would happen and changes nothing", () => {
 test("the sample class holds the sample list", () => {
   const manifest = parse(readFileSync(join(repo, "template-manifest.yaml"), "utf8"));
   const samples = manifest.paths.filter((p) => p.ownership === "sample").map((p) => p.path);
-  assert.deepEqual(samples, ["src/content/services/**"]);
+  assert.deepEqual(samples, ["src/content/services/**", "src/assets/sample/**"]);
 });

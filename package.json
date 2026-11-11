@@ -12,7 +12,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "test": "pnpm run check:template && astro check && pnpm run lint && pnpm run test:unit && astro build && pnpm run check:built",
-    "check:built": "node scripts/check-page-weight.mjs && node scripts/check-security-txt.mjs && node scripts/check-claims.mjs && node scripts/check-browser.mjs",
+    "check:built": "node scripts/check-page-weight.mjs && node scripts/check-security-txt.mjs && node scripts/check-sitemap.mjs && node scripts/check-claims.mjs && node scripts/check-browser.mjs",
     "check:template": "node scripts/check-template-manifest.mjs",
     "lint": "eslint .",
     "test:unit": "node --test \"scripts/*.test.mjs\"",
@@ -24,7 +24,8 @@
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
     "@fontsource-variable/inter": "5.3.0",
-    "astro": "7.3.3"
+    "astro": "7.3.3",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.12",

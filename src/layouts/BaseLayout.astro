@@ -2,7 +2,9 @@
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import StructuredData from "../components/StructuredData.astro";
-import { defaultLanguage, languages, localizedPath, ogLocale, t, unlocalizedPath, type Lang } from "../i18n";
+import SeoHead from "../components/seo/SeoHead.astro";
+import type { ShareImage } from "../components/seo/types";
+import { languages, t, unlocalizedPath, type Lang } from "../i18n";
 import site from "../site.config";
 import "../styles/tokens.css";
 import "../styles/global.css";
@@ -15,17 +17,16 @@ interface Props {
   lang: Lang;
   /** The languages this page exists in; by default all of them. */
   available?: readonly Lang[];
-  /** Leave the page out of search engines (the 404 page). */
+  /** Leave the page out of search engines and the sitemap (the 404 page). */
   noindex?: boolean;
+  /** The picture shown when the page is shared; by default the site's shareImage. */
+  image?: ShareImage;
 }
 
-const { title, description = site.description[Astro.props.lang], lang, available = languages, noindex } = Astro.props;
+const { title, description, lang, available = languages, noindex, image } = Astro.props;
 
-// The page without its language prefix, for the alternates and the switch.
+// The page without its language prefix, for the language switch.
 const path = unlocalizedPath(Astro.url.pathname);
-const absolute = (target: Lang) => new URL(localizedPath(target, path), site.url).toString();
-const alternates = available.length > 1 ? available : [];
-const fullTitle = title === site.name ? title : `${title} | ${site.name}`;
 ---
 
 <!doctype html>
@@ -33,27 +34,10 @@ const fullTitle = title === site.name ? title : `${title} | ${site.name}`;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
-    {noindex && <meta name="robots" content="noindex" />}
     <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{fullTitle}</title>
-    {!noindex && <link rel="canonical" href={absolute(lang)} />}
-    {!noindex && alternates.map((other) => <link rel="alternate" hreflang={other} href={absolute(other)} />)}
-    {
-      !noindex && alternates.includes(defaultLanguage) && (
-        <link rel="alternate" hreflang="x-default" href={absolute(defaultLanguage)} />
-      )
-    }
+    <SeoHead title={title} description={description} lang={lang} available={available} noindex={noindex} image={image} />
     <meta name="theme-color" content={site.themeColor} />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content={site.name} />
-    <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={absolute(lang)} />
-    <meta property="og:locale" content={ogLocale(lang)} />
-    {alternates.filter((other) => other !== lang).map((other) => <meta property="og:locale:alternate" content={ogLocale(other)} />)}
-    <meta name="twitter:card" content="summary" />
     <StructuredData />
   </head>
   <body>

@@ -2,6 +2,8 @@
 // this file. L is the union of the site's language codes, so every text that
 // differs per language must be given in all of them.
 
+import type { ImageMetadata } from "astro";
+
 export type Localized<L extends string> = Record<L, string>;
 
 export interface PostalAddress {
@@ -42,6 +44,13 @@ export interface SiteSettings<L extends string> {
   languages: readonly L[];
   /** The language "/" leads to, and the target of hreflang x-default. */
   defaultLanguage: L;
+  /**
+   * The picture shown when a page is shared on social networks or in a chat:
+   * an imported photo (import photo from "./assets/photo.jpg"), cropped to
+   * 1200 × 630 at build, with what it shows in every language. A page or an
+   * item may give its own. Without one, a shared link shows no picture.
+   */
+  shareImage?: { src: ImageMetadata; alt: Localized<L> };
   /** The colour of the browser's address bar on a phone: the site's background or brand colour, as "#rrggbb". */
   themeColor: string;
   /** The lists of items (see CollectionSettings). */
