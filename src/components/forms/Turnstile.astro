@@ -1,0 +1,31 @@
+---
+// Cloudflare Turnstile, the privacy-friendly challenge for a form (docs/forms.md).
+// No page uses it by default, and without a `siteKey` it renders nothing and
+// loads no script, so a site without a form is unaffected.
+//
+// - The site key is public. The secret key lives only on the form endpoint that
+//   verifies the token, never in this site or in /config.json.
+// - The widget adds a hidden field `cf-turnstile-response` to the form it sits in.
+// - A page that uses it needs its own rule in public/_headers (docs/forms.md).
+//
+// This folder is `shared` in template-manifest.yaml: a template release merges
+// its changes into the site.
+interface Props {
+  /** The widget's public site key; when empty, nothing is rendered. */
+  siteKey?: string;
+  /** A name for the form, shown in Cloudflare's analytics, for example "contact". */
+  action?: string;
+  theme?: "auto" | "light" | "dark";
+}
+
+const { siteKey, action, theme = "auto" } = Astro.props;
+---
+
+{
+  siteKey && (
+    <>
+      <div class="cf-turnstile" data-sitekey={siteKey} data-action={action} data-theme={theme} />
+      <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+    </>
+  )
+}

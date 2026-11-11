@@ -1,12 +1,15 @@
 ---
-// Cookieless visit counts with Plausible Analytics (docs/analytics.md), for a
-// site that sets `analytics` in src/site.config.ts. BaseLayout.astro renders
+// Cookieless visit counts with Plausible Analytics or Cloudflare Web Analytics
+// (docs/analytics.md), for a site that sets `analytics` in src/site.config.ts. BaseLayout.astro renders
 // it only then; a site without it runs no script for this.
 //
 // - Counts only on the production domain (the host of `url`): dev, staging,
 //   `pnpm dev` and the checks in ci send nothing.
 // - Sends one page view per page, and an event "Contact" when a visitor
 //   follows an e-mail or phone link, with the method as its property.
+// - Cloudflare Web Analytics sends no custom events. On the production host the
+//   script below adds Cloudflare's beacon, which counts the page view and the
+//   visitor's Core Web Vitals; the CSP must allow its two origins.
 // - Sets no cookie and stores nothing on the device. The script is served by
 //   the site itself; only the event goes to the endpoint, which the
 //   Content-Security-Policy's connect-src must allow (pnpm test checks it).
@@ -18,15 +21,26 @@ import site from "../../site.config";
 const settings = site.analytics;
 if (!settings) throw new Error("Analytics.astro needs `analytics` in src/site.config.ts.");
 const host = new URL(site.url).hostname;
-const domain = settings.domain ?? host.replace(/^www\./, "");
-const endpoint = settings.endpoint ?? "https://plausible.io/api/event";
+const cloudflare = settings.provider === "cloudflare";
+const domain = settings.provider === "plausible" ? (settings.domain ?? host.replace(/^www\./, "")) : "";
+const endpoint = settings.provider === "plausible" ? (settings.endpoint ?? "https://plausible.io/api/event") : "https://cloudflareinsights.com/cdn-cgi/rum";
+const beacon = "https://static.cloudflareinsights.com/beacon.min.js";
+if (settings.provider === "cloudflare" && !settings.token) throw new Error('analytics.provider "cloudflare" needs a `token` in src/site.config.ts.');
 ---
 
-<meta name="analytics" data-provider={settings.provider} data-host={host} data-domain={domain} data-endpoint={endpoint} />
+<meta
+  name="analytics"
+  data-provider={settings.provider}
+  data-host={host}
+  data-domain={domain}
+  data-endpoint={endpoint}
+  data-token={settings.provider === "cloudflare" ? settings.token : undefined}
+  data-beacon={cloudflare ? beacon : undefined}
+/>
 
 <script>
   const meta = document.querySelector<HTMLMetaElement>('meta[name="analytics"]');
-  const { host, domain, endpoint } = meta?.dataset ?? {};
+  const { host, domain, endpoint, provider, token, beacon } = meta?.dataset ?? {};
 
   function send(name: string, props?: Record<string, string>) {
     // text/plain needs no CORS preflight, as Plausible's own script does.
@@ -38,7 +52,16 @@ const endpoint = settings.endpoint ?? "https://plausible.io/api/event";
     }).catch(() => undefined);
   }
 
-  if (endpoint && domain && location.hostname === host) {
+  if (provider === "cloudflare") {
+    // The same as <script defer src=beacon data-cf-beacon='{"token":"..."}'>, added only on the production host.
+    if (beacon && token && location.hostname === host) {
+      const script = document.createElement("script");
+      script.defer = true;
+      script.src = beacon;
+      script.setAttribute("data-cf-beacon", JSON.stringify({ token }));
+      document.head.append(script);
+    }
+  } else if (endpoint && domain && location.hostname === host) {
     send("pageview");
     document.addEventListener("click", (event) => {
       const link = (event.target as Element | null)?.closest?.('a[href^="mailto:"], a[href^="tel:"]');

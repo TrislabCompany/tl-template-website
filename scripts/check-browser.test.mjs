@@ -24,3 +24,12 @@ test("a built page has the address it is served at", () => {
   assert.equal(pathFor("en.html"), "/en");
   assert.equal(pathFor(join("en", "services", "first-service.html")), "/en/services/first-service");
 });
+
+test("reads the analytics tag of a built page, for either provider", async () => {
+  const { analyticsOf } = await import("./check-browser.mjs");
+  const plausible = '<meta name="analytics" data-provider="plausible" data-host="www.example.com" data-domain="example.com" data-endpoint="https://plausible.io/api/event">';
+  assert.deepEqual(analyticsOf(plausible), { provider: "plausible", host: "www.example.com", domain: "example.com", endpoint: "https://plausible.io/api/event", token: undefined, beacon: undefined });
+  const cloudflare = '<meta name="analytics" data-provider="cloudflare" data-host="www.example.com" data-domain="" data-endpoint="https://cloudflareinsights.com/cdn-cgi/rum" data-token="abc" data-beacon="https://static.cloudflareinsights.com/beacon.min.js">';
+  assert.equal(analyticsOf(cloudflare).token, "abc");
+  assert.equal(analyticsOf("<p>x</p>"), undefined);
+});

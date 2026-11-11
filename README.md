@@ -87,6 +87,8 @@ Renovate proposes updates every Monday, and Dependabot raises security fixes as 
 - [Getting started](docs/getting-started.md): run the site with the dev server and as Cloudflare Pages serves it, and run the tests.
 - [Architecture](docs/architecture.md): the build, Cloudflare Pages, the headers and the request path.
 - [Site settings](docs/site-settings.md): languages, lists of items, contact and legal pages, structured data, `security.txt`, the page-weight budget, the brand and the yearly CO₂ estimate.
+- [Visit counts](docs/analytics.md): the opt-in Plausible or Cloudflare Web Analytics, what each counts and what the site must add.
+- [Forms](docs/forms.md): the opt-in Turnstile challenge for a form, and the headers a form page needs.
 - [Configuration](docs/configuration.md): the settings, `/config.json`, and how to add a `PUBLIC_` setting.
 - [Deployment](docs/deployment.md): Environments, deploy, release and promote, rollback, and how the site is set up and torn down.
 - [Quality checks](docs/quality-checks.md): what `ci / ci` checks, what runs for a PR, accessibility and Lighthouse.

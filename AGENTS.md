@@ -11,7 +11,8 @@ This file is the guide for every AI coding tool (Claude Code, Cursor, Codex, …
 | `src/site.config.ts` | The site's facts: languages, company, contact, lists of items, legal pages, structured data, `security.txt` ([docs/site-settings.md](docs/site-settings.md)) |
 | `src/` | The site: `pages/[...lang]/`, `layouts/`, `components/`, `content/<collection>/<language>/`, `i18n/`, `lib/`, `styles/` (`tokens.css` is the brand) |
 | `src/components/seo/` | The search tags of every page, the share image, the search fields of an item and the sitemap's finishing touches; `shared` with the template ([docs/search-engines.md](docs/search-engines.md)) |
-| `src/components/analytics/` | Cookieless visit counts with Plausible, rendered only when `analytics` is set; `shared` with the template ([docs/analytics.md](docs/analytics.md)) |
+| `src/components/analytics/` | Cookieless visit counts with Plausible or Cloudflare Web Analytics, rendered only when `analytics` is set; `shared` with the template ([docs/analytics.md](docs/analytics.md)) |
+| `src/components/forms/` | The Turnstile challenge for a form, rendered only with a site key; `shared` with the template ([docs/forms.md](docs/forms.md)) |
 | `public/_headers` | The security headers and caching Cloudflare Pages sends ([docs/architecture.md](docs/architecture.md)) |
 | `scripts/` | The checks `pnpm test` runs, the accessibility and Lighthouse checks (`quality.mjs`), the deploy-time settings (`write-config.mjs`), the release versions (`version.mjs`), `pnpm status`, the yearly CO₂ estimate |
 | `.github/workflows/` | ci, Deploy to dev, Release new version, Deploy to staging, Promote to production ([docs/deployment.md](docs/deployment.md)) |
