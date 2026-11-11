@@ -27,8 +27,10 @@ interface Props {
 
 const { title, description = site.description[Astro.props.lang], lang, available = languages, noindex = false, image = site.shareImage } = Astro.props;
 
-// The page without its language prefix, for the alternates.
-const path = unlocalizedPath(Astro.url.pathname);
+// The page without its language prefix, for the alternates. With
+// build.format "file", the home page of a site with one language is built as
+// /index; its address is /.
+const path = unlocalizedPath(Astro.url.pathname).replace(/\/index$/, "") || "/";
 const absolute = (target: Lang) => new URL(localizedPath(target, path), site.url).toString();
 const alternates = available.length > 1 ? available : [];
 const fullTitle = title === site.name ? title : `${title} | ${site.name}`;
