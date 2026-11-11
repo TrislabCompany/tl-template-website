@@ -16,7 +16,7 @@ Nothing new beyond v0.4.0. A site that switches on `analytics` needs a Plausible
 
 ### platform
 
-Nothing.
+- **`.github/workflows/checks.yml`, `.github/workflows/release.yml`**: Chromium for the browser check is installed without `--with-deps`. The runner's Google Chrome already has the system libraries it needs, so `ci / ci` and a release no longer fail when Ubuntu's package mirror can't be reached (as on 2026-11-11, when every run failed at that step).
 
 ### shared
 
@@ -46,6 +46,7 @@ Shown as a suggestion only. Steps 2 to 4 below are needed for `pnpm test` to pas
 
 ### template-only
 
+- **`.github/workflows/template-init.yml`**: the same install without `--with-deps`.
 - **`template-manifest.yaml`**: the rules for `src/components/seo/**` and `src/components/analytics/**` (shared) and `src/assets/sample/**` (sample).
 - **`scripts/init/content.config.ts.tmpl`, `scripts/init/item-collection.ts.tmpl`**, `scripts/init-site.test.mjs`: a new site's lists get the search fields.
 - **`docs/template-releases.md`**: the row for this release.
@@ -53,7 +54,7 @@ Shown as a suggestion only. Steps 2 to 4 below are needed for `pnpm test` to pas
 
 ## Upgrade steps
 
-1. Take the `shared` changes: the two new folders in `src/components/`, `astro.config.mjs`, `package.json` (then `pnpm install`, which adds `sharp` to the lock file), the scripts and the docs. A site with its own redirects in `public/_redirects` keeps them from now on: check that the build no longer drops them.
+1. Take the `platform` workflows as they are. Take the `shared` changes: the two new folders in `src/components/`, `astro.config.mjs`, `package.json` (then `pnpm install`, which adds `sharp` to the lock file), the scripts and the docs. A site with its own redirects in `public/_redirects` keeps them from now on: check that the build no longer drops them.
 2. In `src/lib/site-settings.ts`, add the optional `shareImage` and `analytics` settings as in the template.
 3. In `src/layouts/BaseLayout.astro`, replace the description, robots, title, canonical, alternate, Open Graph and `twitter:card` tags with `<SeoHead … />`, add the `image` prop, and add `{site.analytics && <Analytics />}` after the structured data. Keep the site's own head tags. A site that wrote its own `og:image` removes it and passes the picture as `image` (or `shareImage` in `src/site.config.ts`), so that every page has one `og:image`.
 4. In `src/content.config.ts`, give each list `...seoFields(image)`, and in the item page spread `seoProps(entry.data)` into `BaseLayout`.

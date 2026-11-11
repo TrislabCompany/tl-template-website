@@ -44,10 +44,12 @@ jobs:
       - if: ${{ steps.scope.outputs.any == 'true' }}
         uses: ./.github/actions/setup
 
-      # The version that matches playwright in pnpm-lock.yaml, with the system
-      # libraries it needs. Only the browser check uses it.
+      # The version that matches playwright in pnpm-lock.yaml. Only the browser
+      # check uses it. No --with-deps: the runner's Google Chrome already has the
+      # system libraries Chromium needs, so the check doesn't depend on Ubuntu's
+      # package mirror.
       - if: ${{ steps.scope.outputs.built == 'true' }}
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install chromium
 
       # The steps of `pnpm test`, one by one so each can be skipped.
       - name: Template manifest
