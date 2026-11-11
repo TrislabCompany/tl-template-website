@@ -94,6 +94,20 @@ export interface SiteSettings<L extends string> {
   /** The JSON-LD on every page: Organization, or LocalBusiness when customers visit the address. */
   structuredData: "Organization" | "LocalBusiness" | "none";
 
+  /**
+   * Cookieless visit counts with Plausible Analytics, off when left out
+   * (docs/analytics.md). Counts only on the production domain. When set, add
+   * the endpoint's origin to connect-src in public/_headers and say so in the
+   * privacy policy of every language: pnpm test checks both.
+   */
+  analytics?: {
+    provider: "plausible";
+    /** The site's name in Plausible; by default the host of `url` without "www.". */
+    domain?: string;
+    /** Where events go; by default https://plausible.io/api/event. */
+    endpoint?: string;
+  };
+
   /** /.well-known/security.txt (RFC 9116). */
   securityTxt: {
     /** A role mailbox or a URL, for example "mailto:security@example.com". */

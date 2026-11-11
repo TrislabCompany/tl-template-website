@@ -7,7 +7,9 @@
 // - Reflow: at 320 pixels nothing scrolls sideways (WCAG 1.4.10).
 // - No cookies and nothing stored on the device: no cookie, localStorage or
 //   sessionStorage entry after a page has loaded.
-// - No third-party content: every request goes to the site itself.
+// - No third-party content: every request goes to the site itself. A site
+//   with analytics (docs/analytics.md) also sends one page view to its
+//   endpoint, and only on its production host: checkAnalytics below.
 //
 // Run by `pnpm test` after the build, so ci runs it on every PR. It serves
 // dist/ itself the way Cloudflare Pages does (/en/about is en/about.html).
@@ -106,6 +108,51 @@ async function checkPage(browser, origin, path, viewport) {
   return problems.map((problem) => `${path} (${viewport.name}): ${problem}`);
 }
 
+/** The analytics settings a built page carries (src/components/analytics/Analytics.astro), or undefined. */
+export function analyticsOf(html) {
+  const tag = html.match(/<meta\s+name="analytics"[^>]*>/i)?.[0];
+  if (!tag) return undefined;
+  const attr = (name) => tag.match(new RegExp(`\\bdata-${name}="([^"]*)"`))?.[1];
+  return { host: attr("host"), domain: attr("domain"), endpoint: attr("endpoint") };
+}
+
+// A site with analytics counts only on its production host, so the pages
+// above, served from 127.0.0.1, send nothing. Here one page is opened as if it
+// were on that host (every request answered from dist/, nothing leaves the
+// machine): it must send exactly one page view, to the endpoint and nowhere
+// else, and still set no cookie and store nothing.
+async function checkAnalytics(browser, path, analytics) {
+  const problems = [];
+  const sent = [];
+  const context = await browser.newContext();
+  await context.route("**/*", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.hostname === analytics.host) {
+      const file = fileFor(url.pathname);
+      const body = file && (await readFile(join(dist, file)).catch(() => undefined));
+      if (body) return route.fulfill({ status: 200, contentType: TYPES[extname(file)] ?? "application/octet-stream", body });
+      return route.fulfill({ status: 404, body: "" });
+    }
+    if (request.url() === analytics.endpoint) {
+      sent.push(request.postData());
+      return route.fulfill({ status: 202, body: "ok" });
+    }
+    problems.push(`analytics: loads ${url.href} from another site`);
+    return route.abort();
+  });
+  const page = await context.newPage();
+  await page.goto(`http://${analytics.host}${path}`, { waitUntil: "load" });
+  await page.waitForTimeout(500);
+  const views = sent.map((body) => JSON.parse(body ?? "{}")).filter((event) => event.name === "pageview");
+  if (views.length !== 1) problems.push(`analytics: ${path} sent ${views.length} page views on its production host, not 1`);
+  else if (views[0].domain !== analytics.domain) problems.push(`analytics: the page view names ${views[0].domain}, not ${analytics.domain}`);
+  const storage = await page.evaluate(() => localStorage.length + sessionStorage.length);
+  if (storage > 0 || (await context.cookies()).length > 0) problems.push("analytics: sets a cookie or stores data");
+  await context.close();
+  return problems;
+}
+
 async function main() {
   const pages = (await readdir(dist, { withFileTypes: true, recursive: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith(".html"))
@@ -126,6 +173,7 @@ async function main() {
   }
 
   const failures = [];
+  let analytics;
   try {
     const queue = VIEWPORTS.flatMap((viewport) => pages.map((path) => ({ path, viewport })));
     await Promise.all(
@@ -135,6 +183,8 @@ async function main() {
         }
       }),
     );
+    analytics = analyticsOf(await readFile(join(dist, fileFor(pages[0])), "utf8"));
+    if (analytics) failures.push(...(await checkAnalytics(browser, pages[0], analytics)));
   } finally {
     await browser.close();
     server.close();
@@ -145,7 +195,7 @@ async function main() {
     process.exit(1);
   }
   console.log(
-    `browser check: ok. ${pages.length} pages at ${VIEWPORTS.map((v) => v.name).join(" and ")}: no WCAG 2.1 AA or best-practice violations found by axe-core, no sideways scrolling, no cookies or storage, no third-party requests.`,
+    `browser check: ok. ${pages.length} pages at ${VIEWPORTS.map((v) => v.name).join(" and ")}: no WCAG 2.1 AA or best-practice violations found by axe-core, no sideways scrolling, no cookies or storage, no third-party requests${analytics ? `; on ${analytics.host} one page view goes to ${new URL(analytics.endpoint).origin}, and nothing else` : ""}.`,
   );
 }
 

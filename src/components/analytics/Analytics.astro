@@ -1,0 +1,48 @@
+---
+// Cookieless visit counts with Plausible Analytics (docs/analytics.md), for a
+// site that sets `analytics` in src/site.config.ts. BaseLayout.astro renders
+// it only then; a site without it runs no script for this.
+//
+// - Counts only on the production domain (the host of `url`): dev, staging,
+//   `pnpm dev` and the checks in ci send nothing.
+// - Sends one page view per page, and an event "Contact" when a visitor
+//   follows an e-mail or phone link, with the method as its property.
+// - Sets no cookie and stores nothing on the device. The script is served by
+//   the site itself; only the event goes to the endpoint, which the
+//   Content-Security-Policy's connect-src must allow (pnpm test checks it).
+//
+// This folder is `shared` in template-manifest.yaml: a template release merges
+// its changes into the site.
+import site from "../../site.config";
+
+const settings = site.analytics;
+if (!settings) throw new Error("Analytics.astro needs `analytics` in src/site.config.ts.");
+const host = new URL(site.url).hostname;
+const domain = settings.domain ?? host.replace(/^www\./, "");
+const endpoint = settings.endpoint ?? "https://plausible.io/api/event";
+---
+
+<meta name="analytics" data-provider={settings.provider} data-host={host} data-domain={domain} data-endpoint={endpoint} />
+
+<script>
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="analytics"]');
+  const { host, domain, endpoint } = meta?.dataset ?? {};
+
+  function send(name: string, props?: Record<string, string>) {
+    // text/plain needs no CORS preflight, as Plausible's own script does.
+    fetch(endpoint!, {
+      method: "POST",
+      keepalive: true,
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ name, url: location.origin + location.pathname, domain, referrer: document.referrer || null, props }),
+    }).catch(() => undefined);
+  }
+
+  if (endpoint && domain && location.hostname === host) {
+    send("pageview");
+    document.addEventListener("click", (event) => {
+      const link = (event.target as Element | null)?.closest?.('a[href^="mailto:"], a[href^="tel:"]');
+      if (link) send("Contact", { method: link.getAttribute("href")!.startsWith("mailto:") ? "e-mail" : "phone" });
+    });
+  }
+</script>
