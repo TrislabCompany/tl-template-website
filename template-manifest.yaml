@@ -83,7 +83,7 @@ paths:
   - { path: public/_headers, ownership: shared }
   - { path: public/**, ownership: product }
   - { path: AGENTS.md, ownership: shared }
-  - { path: .agents/rules/**, ownership: shared }
+  - { path: .claude/rules/**, ownership: shared }
   - { path: .github/pull_request_template.md, ownership: shared }
   - { path: docs/**, ownership: shared }
   - { path: scripts/**, ownership: shared }
