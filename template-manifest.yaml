@@ -51,6 +51,7 @@ paths:
   - { path: .claude/skills/update-from-template/**, ownership: platform }
   - { path: docs/upgrading/README.md, ownership: platform }
   - { path: CLAUDE.md, ownership: platform }
+  - { path: .claude/settings.json, ownership: platform }
   - { path: renovate.json, ownership: platform }
   - { path: scripts/write-config.mjs, ownership: platform }
   - { path: scripts/write-config.test.mjs, ownership: platform }

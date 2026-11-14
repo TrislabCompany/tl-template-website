@@ -1,6 +1,7 @@
 ---
 name: release-template
-description: Prepare a release of this template — choose the next template-<type>/vX.Y.Z version from the merged changes and the breaking rules, write the release notes docs/upgrading/template-vX.Y.Z.md (changes by ownership, upgrade steps, requires, breaking) and their row in docs/template-releases.md, run the checks and open the release PR; after the merge, the template-release workflow tags the merge commit and publishes the GitHub Release; check it, start it if it did not run, then point to the canary's update. Only in the template repository itself. Use when a maintainer asks to release, version or tag the template.
+description: Prepare a release of this template — choose the next template-<type>/vX.Y.Z version, write its release notes and their row in docs/template-releases.md, run the checks and open the release PR; after the merge, check the tag and the GitHub Release the workflow made. Only in the template repository itself. Use when a maintainer asks to release, version or tag the template.
+disable-model-invocation: true
 metadata:
   owner: template-website
   ownership: template-only
