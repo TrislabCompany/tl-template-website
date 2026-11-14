@@ -26,14 +26,18 @@ This file is the guide for every AI coding tool (Claude Code, Cursor, Codex, …
 - **Dependencies stay pinned and current** ([docs/dependencies.md](docs/dependencies.md)). Renovate proposes updates weekly and Dependabot raises security fixes. Add a package only with a reason in the PR, pin it exactly, and never take a release younger than 3 days.
 - **Every change is a PR** to `main`, merged after `ci / ci` passes and a code owner approves. Every merge deploys to dev.
 - **Release, deploy and promote only with the workflows** ([docs/deployment.md](docs/deployment.md)): *Release new version*, *Deploy to staging*, *Promote to production*. Never tag by hand, never move or delete a tag, never deploy with `wrangler` from a laptop or through the Cloudflare dashboard.
-- **Don't edit the platform's files:** the workflows in `.github/workflows/` and `.github/actions/`, `renovate.json`, `CLAUDE.md`, `scripts/write-config.mjs`, `version.mjs`, `status.mjs`, the manifest check and the template skills. An `update-from-template` PR replaces them; ask the platform team for a change.
+- **Don't edit the platform's files:** the workflows in `.github/workflows/` and `.github/actions/`, `renovate.json`, `CLAUDE.md`, `.claude/settings.json`, `scripts/write-config.mjs`, `version.mjs`, `status.mjs`, the manifest check and the template skills. An `update-from-template` PR replaces them; ask the platform team for a change.
 - **No secrets** in the repository, the build or `/config.json`. The Cloudflare token lives only in the GitHub Environments. Settings reach the site only as `PLATFORM_*` and `PUBLIC_*` ([docs/configuration.md](docs/configuration.md)).
 - **Hostnames, DNS, Access and the Pages project** belong to the infrastructure repository, not to this repository ([docs/deployment.md](docs/deployment.md#set-up-and-tear-down)).
 - **The repository is public.** No personal data, client contracts, prices or internal addresses in code, docs, PRs or commits.
+- **No AI attribution.** No `Co-Authored-By:` trailer and no "generated with" line in a commit, PR or comment. Commit with your Trislab account.
+- **`.claude/settings.json` enforces the rules above**: it denies `wrangler` deploys, creating, deleting or pushing tags by hand, and reading `.env` files, and asks before an edit of the workflows. It is a platform file; put personal settings in `.claude/settings.local.json`.
 
 ## Skills
 
 Skills live only in `.agents/skills/<name>/SKILL.md`. When a task matches a skill, read that file and follow it. Claude Code finds skills only in `.claude/skills/`, so each skill also has a pointer `.claude/skills/<name>/SKILL.md`: the same front matter, and a body that sends the agent to the real file. Add one with every new skill; `pnpm test` fails without it.
+
+A skill command or parameter (such as `release-template prepare`) is described in `docs/` too: what you type, what it checks, what it changes and whether it asks first. `SKILL.md` alone is not enough; change the docs in the same PR as the command.
 
 ### Template skills
 

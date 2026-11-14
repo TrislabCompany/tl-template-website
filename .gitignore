@@ -11,3 +11,7 @@ page-weight-report.json
 .wrangler/
 .quality/
 .lighthouseci/
+
+# Personal Claude Code files
+.claude/settings.local.json
+CLAUDE.local.md
