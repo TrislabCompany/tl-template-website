@@ -23,7 +23,7 @@ The template's `template-manifest.yaml` gives every path one ownership. An updat
 | Ownership | For example | What an update does | You |
 | --- | --- | --- | --- |
 | `platform` | `.github/workflows/*`, `.github/actions/`, `renovate.json`, `CLAUDE.md`, the deploy-time scripts (`scripts/write-config.mjs`, `version.mjs`, `status.mjs`), the skills `release` and `update-from-template`, this page | Replaces the file with the template's | Don't edit it; ask the platform team for a change in the template |
-| `shared` | `AGENTS.md` outside its template block, `.agents/rules/`, the rest of `docs/`, the other scripts, `public/_headers`, `astro.config.mjs`, `package.json` | Merges the template's change into your file and lists every conflict | Adapt it as you need; resolve the listed conflicts in the PR |
+| `shared` | `AGENTS.md` outside its template block, the coding rules in `.claude/rules/`, the rest of `docs/`, the other scripts, `public/_headers`, `astro.config.mjs`, `package.json` | Merges the template's change into your file and lists every conflict | Adapt it as you need; resolve the listed conflicts in the PR |
 | `product` | `src/`, content, `README.md`, `CODEOWNERS`, `pnpm-lock.yaml` | Nothing; the template's change is shown in the PR as a suggestion | Yours |
 | `template-only` | The template's release skill and notes | Never copied | — |
 

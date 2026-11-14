@@ -4,7 +4,7 @@ Every commit pushed to a PR, and every push to `main`, runs the required check `
 
 | Step | Where it runs | What it checks |
 | --- | --- | --- |
-| `pnpm test` | GitHub and locally | Types and content (`astro check`), lint, the unit tests of `scripts/`, `astro build`, then the page-weight budget and `security.txt` on `dist/` ([getting-started.md](getting-started.md)) |
+| `pnpm test` | GitHub and locally | The template manifest and exact dependency pins (`check:template`), types and content (`astro check`), lint, the unit tests of `scripts/`, `astro build`, then the page-weight budget and `security.txt` on `dist/` ([getting-started.md](getting-started.md)) |
 | Accessibility, `pnpm test:a11y` | GitHub and locally | pa11y-ci on every page |
 | Lighthouse CI | **GitHub only** | Lighthouse scores and Core Web Vitals |
 
