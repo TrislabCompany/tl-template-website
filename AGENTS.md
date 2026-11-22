@@ -4,6 +4,34 @@
 
 This file is the guide for every AI coding tool (Claude Code, Cursor, Codex, …). `CLAUDE.md` only imports it: edit conventions here.
 
+## Role
+
+The same block starts the `AGENTS.md` of every Trislab repository, so an agent in any of them knows where a change belongs.
+
+- **For:** one content site made from `tl-template-website`, or the template itself, which every site is copied from.
+- **Contains:**
+  - the Astro site, its content and settings;
+  - the checks in `scripts/`;
+  - the workflows that deploy it to Cloudflare Pages;
+  - in the template only: the sample content and the template-only files, which `pnpm init-site` deletes.
+- **Never contains:**
+  - .NET or the framework;
+  - an API, a database or users of its own (that makes it a webapp, on `tl-product-webapp`, today `tl-template-webapp`);
+  - hostnames, DNS, Access or the Pages project;
+  - personal data, client contracts or prices.
+- **A change goes elsewhere when it is:**
+  - a hostname, DNS record, Access rule, the Pages project or a new repository: `tl-cloud-infrastructure`;
+  - a change every site needs: `tl-template-website`, then a template release and an `update-from-template` PR in each site;
+  - the site's plan, intake or brief: `tl-product-ideas` (private), which writes `docs/brief.md`.
+- **Released as:**
+  - a site: a tag `vX.Y.Z`, made by *Release new version*;
+  - the template: `template-website/vX.Y.Z`.
+- **Skills:** `.agents/skills/`, listed under [Skills](#skills).
+- **Scripts:**
+  - The `pnpm` commands in `package.json`: `pnpm test`, `pnpm test:a11y`, `pnpm status` and `pnpm co2`, plus `pnpm init-site` once, in the template. The scripts they run are in `scripts/`.
+  - Add a command there when the same kind of work comes back and a script makes it faster and cheaper in tokens. Write none for one-off work.
+  - A script prints a summary and the errors, not a dump.
+
 ## Repository map
 
 | Path | What |
