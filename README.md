@@ -98,3 +98,7 @@ Renovate proposes updates every Monday, and Dependabot raises security fixes as 
 ## Maintaining the template
 
 The template is released as `template-website/vX.Y.Z`, never `v*`. Every path has an ownership in `template-manifest.yaml`, which `pnpm test` checks. The `release-template` skill prepares a release; [docs/template-releases.md](docs/template-releases.md) has the rules and the list of releases. Both stay in the template and never reach a product repository.
+
+## Licence
+
+Proprietary: [LICENSE](LICENSE). The code is public to read, but it belongs to Trislab d.o.o., and only Trislab, and the clients of the applications Trislab delivers under a written agreement, may use it. Cloning or forking it for use, copying, redistribution and training AI models on it are not allowed. Material of others, such as the dependencies and a client's texts, logos and photos, keeps its owner's rights and its own licence.
