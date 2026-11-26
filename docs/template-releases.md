@@ -39,7 +39,7 @@ The workflow `template-init.yml` runs the script on a copy with each `scripts/in
 
 ## Changing the template
 
-Every change is a PR to `main`, and `ci / ci` must pass. `update-from-template` and `docs/upgrading/README.md` have the same process in all three templates, apart from `metadata.owner` and the examples of the ownership table: change them in all three together. The `release` skill and `docs/deployment.md` of this template describe Cloudflare Pages and are its own.
+Every change is a PR to `main`, and `ci / ci` must pass. `update-from-template`, `scripts/update-from-template.mjs` (with its tests) and `docs/upgrading/README.md` have the same process in all three templates, apart from `metadata.owner` and the examples of the ownership table: change them in all three together. The `release` skill and `docs/deployment.md` of this template describe Cloudflare Pages and are its own.
 
 How developers deploy and release is written in two places that must agree: `docs/deployment.md` ("Ship a change to dev", "Release to staging", "Promote to production", "Roll back", "When a run fails", "Versions and release notes", "Where the staging version is kept") and the `release` skill, which links to those headings and to the workflows' names. Change them together, and keep the headings the skill links to: changing one is breaking. A product repository gets the change only through a template release and its `update-from-template` PR, the canary first ([Releasing](#releasing)).
 

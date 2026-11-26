@@ -61,6 +61,8 @@ paths:
   - { path: scripts/status.mjs, ownership: platform }
   - { path: scripts/check-template-manifest.mjs, ownership: platform }
   - { path: scripts/check-template-manifest.test.mjs, ownership: platform }
+  - { path: scripts/update-from-template.mjs, ownership: platform }
+  - { path: scripts/update-from-template.test.mjs, ownership: platform }
 
   # Shared parts of src/: the search tags and fields (docs/search-engines.md). A
   # release merges its changes in, so SEO fixes reach every site without a hand edit.
