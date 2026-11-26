@@ -74,6 +74,7 @@ paths:
   - { path: README.md, ownership: product }
   - { path: .github/CODEOWNERS, ownership: product }
   - { path: pnpm-lock.yaml, ownership: product }
+  - { path: .audit-accepted, ownership: product }
   - { path: src/**, ownership: product }
   - { path: docs/brief.md, ownership: product }
   - { path: docs/co2/**, ownership: product }

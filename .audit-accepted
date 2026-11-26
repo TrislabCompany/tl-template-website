@@ -1,0 +1,5 @@
+# Advisories the daily audit (.github/workflows/audit.yml) accepts for now.
+# One advisory URL or GHSA id per line, with this line right above it:
+#   # reason: <why it doesn't apply or can't be fixed yet>; expires: YYYY-MM-DD
+# An entry without a reason, or past its expiry date, fails the audit.
+

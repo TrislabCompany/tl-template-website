@@ -23,6 +23,7 @@ jobs:
       contents: read
     env:
       ASTRO_TELEMETRY_DISABLED: 1
+      MARKDOWNLINT_VERSION: 0.24.0
     steps:
       # Depth 2: on a PR, HEAD is the merge commit and HEAD^1 is main.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,6 +41,36 @@ jobs:
           else
             node scripts/ci-scope.mjs --all
           fi
+
+      # Lints the Markdown files the PR adds or changes, not the whole
+      # repository, so an old file is fixed when it is next touched. The site's
+      # content pages in src/content/ are left to astro check. The same rules
+      # as tl-platform's app-ci, unless the repository has its own config.
+      - name: Lint the changed Markdown
+        if: github.event_name == 'pull_request'
+        run: |
+          mapfile -t files < <(git diff --name-only --diff-filter=d HEAD^1 HEAD -- '*.md' ':!src/content/**' | sed 's|^|./|')
+          if [ "${#files[@]}" = 0 ]; then
+            echo "No Markdown changed"
+            exit 0
+          fi
+          config=()
+          if ! compgen -G '.markdownlint-cli2.*' > /dev/null && ! compgen -G '.markdownlint.*' > /dev/null; then
+            config=(--config "$RUNNER_TEMP/.markdownlint-cli2.jsonc")
+            cat > "$RUNNER_TEMP/.markdownlint-cli2.jsonc" <<'JSON'
+          {
+            "config": {
+              "default": true,
+              "MD013": false,
+              "MD024": { "siblings_only": true },
+              "MD033": false,
+              "MD041": false,
+              "MD060": false
+            }
+          }
+          JSON
+          fi
+          npx --yes "markdownlint-cli2@$MARKDOWNLINT_VERSION" "${config[@]}" "${files[@]}"
 
       - if: ${{ steps.scope.outputs.any == 'true' }}
         uses: ./.github/actions/setup

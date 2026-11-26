@@ -6,6 +6,10 @@ name: ci
 # are in checks.yml, so the check keeps the name `ci / ci` that the ruleset of
 # main requires. The job lighthouse-comment then posts the Lighthouse results
 # on the PR. Deploys nothing.
+#
+# After a push to main, the job main-failure-issue keeps one issue "main is
+# failing: ci / ci" (label ci-main) open while the check fails on main, and
+# closes it on the next green run (tl-platform main-failure-issue.yml).
 
 on:
   pull_request:
@@ -76,3 +80,14 @@ jobs:
           else
             gh api -X POST "repos/$REPO/issues/$PR/comments" -F body=@comment.md > /dev/null
           fi
+
+  main-failure-issue:
+    needs: [ci]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      actions: read
+      issues: write
+      pull-requests: read
+    uses: TrislabCompany/tl-platform/.github/workflows/main-failure-issue.yml@428d6959f4cb95c1d1015ef5a523600a0a222dd0 # app-workflows/v0.6.0
+    with:
+      result: ${{ needs.ci.result }}

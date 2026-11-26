@@ -1,0 +1,39 @@
+name: audit
+
+# Every day, audits the site's npm dependencies (pnpm-lock.yaml) against the
+# known advisories (tl-platform dependency-audit.yml). So a new advisory shows
+# up within a day, as an issue, instead of failing some unrelated PR.
+#
+# It fails on an advisory of moderate severity or higher that isn't accepted in
+# .audit-accepted, with a reason and an expiry date. A failure opens the issue
+# "main is failing: audit" (label ci-main), and the next green run closes it
+# (docs/quality-checks.md).
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    permissions:
+      contents: read
+    uses: TrislabCompany/tl-platform/.github/workflows/dependency-audit.yml@428d6959f4cb95c1d1015ef5a523600a0a222dd0 # app-workflows/v0.6.0
+
+  main-failure-issue:
+    needs: [audit]
+    if: always()
+    permissions:
+      actions: read
+      issues: write
+      pull-requests: read
+    uses: TrislabCompany/tl-platform/.github/workflows/main-failure-issue.yml@428d6959f4cb95c1d1015ef5a523600a0a222dd0 # app-workflows/v0.6.0
+    with:
+      result: ${{ needs.audit.result }}
+      check: audit
