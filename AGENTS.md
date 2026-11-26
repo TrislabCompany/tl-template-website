@@ -43,7 +43,7 @@ The same block starts the `AGENTS.md` of every Trislab repository, so an agent i
 | `src/components/forms/` | The Turnstile challenge for a form, rendered only with a site key; `shared` with the template ([docs/forms.md](docs/forms.md)) |
 | `public/_headers` | The security headers and caching Cloudflare Pages sends ([docs/architecture.md](docs/architecture.md)) |
 | `scripts/` | The checks `pnpm test` runs, the accessibility and Lighthouse checks (`quality.mjs`), the deploy-time settings (`write-config.mjs`), the release versions (`version.mjs`), `pnpm status`, the yearly CO₂ estimate |
-| `.github/workflows/` | ci, Deploy to dev, Release new version, Deploy to staging, Promote to production ([docs/deployment.md](docs/deployment.md)) |
+| `.github/workflows/` | ci, Deploy to dev, Release new version, Deploy to staging, Promote to production ([docs/deployment.md](docs/deployment.md)), the daily audit, and `template-update`, which opens the next template update every day ([docs/upgrading/README.md](docs/upgrading/README.md)) |
 | `.agents/skills/` | The skills below; the only place skills are written |
 | `.claude/rules/` | The coding rules, loaded by path (below); `shared` with the template |
 | `.claude/skills/` | One pointer per skill, with the same front matter, so that Claude Code lists it |

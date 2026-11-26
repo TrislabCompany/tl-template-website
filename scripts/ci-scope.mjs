@@ -20,7 +20,7 @@ const NOTHING = [
   /^\.(editorconfig|gitattributes|gitignore)$/,
   /^renovate\.json$/,
   /^\.github\/CODEOWNERS$/,
-  /^\.github\/workflows\/(deploy-dev|deploy-staging|promote|release|pages-deploy)\.yml$/,
+  /^\.github\/workflows\/(deploy-dev|deploy-staging|promote|release|pages-deploy|template-update)\.yml$/,
 ];
 
 const SITE = /^(src|public)\//;
