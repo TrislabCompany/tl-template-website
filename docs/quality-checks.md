@@ -17,7 +17,7 @@ The full run takes about 7 minutes, most of it pa11y and Lighthouse. So on a PR,
 
 | The PR changes | What runs |
 | --- | --- |
-| Only `docs/`, `*.md` in the root, `renovate.json`, the deploy and release workflows | Nothing but the Markdown lint |
+| Only `docs/`, `*.md` in the root, `renovate.json`, the deploy and release workflows, `template-update` | Nothing but the Markdown lint |
 | A content page, `src/content/<collection>/<language>/<page>.md` | `astro check`, the build, the checks on the built site, then pa11y and Lighthouse **only on the pages it shows on**: its own, the list of its collection, the home page and the sitemap page of that language |
 | Anything else in `src/` or `public/`, `astro.config.mjs`, `package.json`, `pnpm-lock.yaml`, `tsconfig.json` | Everything, on every page |
 | A script in `scripts/` | Lint and the unit tests, and the check the script implements (the built-site checks, pa11y, Lighthouse) |

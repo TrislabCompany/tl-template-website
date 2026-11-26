@@ -5,7 +5,7 @@ import { CHECKS, checksFor, isPrefixed, scope } from "./ci-scope.mjs";
 const on = (result) => CHECKS.filter((c) => result.checks[c]);
 
 test("docs and repository settings run nothing", () => {
-  const r = scope(["docs/deployment.md", "README.md", "renovate.json", ".github/workflows/release.yml"]);
+  const r = scope(["docs/deployment.md", "README.md", "renovate.json", ".github/workflows/release.yml", ".github/workflows/template-update.yml"]);
   assert.deepEqual(on(r), []);
 });
 

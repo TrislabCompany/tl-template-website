@@ -1,0 +1,126 @@
+name: template-update
+
+# Opens the next template update as a PR, every day and on demand
+# (docs/upgrading/README.md). scripts/update-from-template.mjs picks the next
+# minor after .template-version and waits until the canary repository has taken
+# it. It applies the update by the ownership in the template's manifest and
+# writes the PR body.
+#
+# A clean update goes on auto-merge: it merges once a person approves it and
+# ci / ci is green. An update with conflicts, kept files or upgrade steps gets
+# the label needs-agent, and an agent finishes it on its branch with the
+# update-from-template skill.
+#
+# Nothing happens in the template itself, in a repository without
+# .template-version, or when a PR for that release already exists (open,
+# closed or merged).
+#
+# The branch and the PR are made with a token of the org's GitHub App (org
+# variable RELEASE_APP_ID, org secret RELEASE_APP_PRIVATE_KEY). A PR opened
+# with the workflow's own token would not start ci / ci, and only a token with
+# the workflows permission may change files in .github/workflows/.
+
+on:
+  schedule:
+    - cron: "23 6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: template-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Find the next update
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ ! -f scripts/update-from-template.mjs ]; then
+            echo "No scripts/update-from-template.mjs: take the next update with the update-from-template skill." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node scripts/update-from-template.mjs --wait-for-canary --outputs "$GITHUB_OUTPUT" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Check for a PR of that release
+        id: existing
+        if: steps.plan.outputs.state == 'ready'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.plan.outputs.branch }}
+        run: |
+          set -euo pipefail
+          prs=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --state all --json url --jq '.[].url')
+          if [ -n "$prs" ]; then
+            echo "A PR of $BRANCH exists already: $prs" >> "$GITHUB_STEP_SUMMARY"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Token of the App
+        id: app
+        if: steps.existing.outputs.found == 'false'
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2.2.2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+          permission-workflows: write
+
+      - name: Apply the update and open the PR
+        if: steps.existing.outputs.found == 'false'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
+          BRANCH: ${{ steps.plan.outputs.branch }}
+          TITLE: ${{ steps.plan.outputs.title }}
+          BASE: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git switch -c "$BRANCH"
+          node scripts/update-from-template.mjs --apply --report "$RUNNER_TEMP/body.md" --outputs "$RUNNER_TEMP/apply.txt"
+          needs_agent=$(sed -n 's/^needs_agent=//p' "$RUNNER_TEMP/apply.txt")
+
+          bot_id=$(gh api "users/${APP_SLUG}%5Bbot%5D" --jq .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "$TITLE"
+          git push -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/$BRANCH"
+
+          gh label create template-update --repo "$GITHUB_REPOSITORY" --color 0E8A16 --description "An update from the template" --force > /dev/null
+          labels=(--label template-update)
+          if [ "$needs_agent" = true ]; then
+            gh label create needs-agent --repo "$GITHUB_REPOSITORY" --color D93F0B --description "An agent finishes it with the update-from-template skill" --force > /dev/null
+            labels+=(--label needs-agent)
+          fi
+          url=$(gh pr create --repo "$GITHUB_REPOSITORY" --base "$BASE" --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/body.md" "${labels[@]}")
+          echo "Opened $url" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$needs_agent" = true ]; then
+            echo "It needs an agent: conflicts, kept files or upgrade steps (see the PR)." >> "$GITHUB_STEP_SUMMARY"
+          elif ! gh pr merge "$url" --auto --squash; then
+            echo "::warning::Auto-merge could not be turned on for $url; the repository needs the setting Allow auto-merge. Merge it by hand once it is approved and green."
+          fi

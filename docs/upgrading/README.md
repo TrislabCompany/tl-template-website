@@ -40,6 +40,7 @@ When a template release adds a skill with the name of one of yours, the update s
 - `ci / ci` must pass, as on every PR. Review it like any other change; the merge deploys to dev, and the change reaches production with the next release and promotion.
 - The canary repository takes each release first. Other repositories follow once the canary's update is merged and deployed.
 - `node scripts/update-from-template.mjs` does the routine part. Without options it says what the next update brings and changes nothing. With `--apply --report <file>` it chooses the release, copies the `platform` files, merges the `shared` ones, rewrites the template block of `AGENTS.md`, bumps `.template-version` and writes the PR body with the conflicts, the suggestions and the upgrade steps. Your coding agent runs it when you ask it to "update from the template", then resolves the conflicts and does the upgrade steps.
+- The workflow `template-update` runs the script every day, and on demand from the Actions tab. When a release is due and the canary has taken it, it opens the PR itself, with the label `template-update`. A clean update goes on auto-merge: it merges once a person approves it and `ci / ci` is green. An update with conflicts, kept files or upgrade steps also gets the label `needs-agent`: ask your coding agent to finish it on its branch with the `update-from-template` skill. It makes the PR with the token of the organisation's GitHub App, so that `ci / ci` runs on it.
 
 ## The framework version
 
