@@ -12,6 +12,8 @@ Brings one template release into this repository. The repository shares no git h
 
 This file is owned by the platform and is the same in every template. A product repository never edits it: the update replaces it.
 
+**The script does the routine part.** `node scripts/update-from-template.mjs` does steps 3 to 9 and 12 the same way every time. Without options it prints what the next update brings and changes nothing. With `--apply --report <file>` it applies the update, bumps `.template-version` and writes the PR body: the releases, Breaking, Requires, the changes by ownership, the conflicts, the files it kept, the suggestions and the upgrade steps. It stops when a template skill would take a project skill's name. Run it after step 2, then do what it leaves: the conflicts and kept files it lists, the upgrade steps (step 10), the checks (step 11) and the PR (step 13). Do its steps by hand only for an untracked repository.
+
 ## Terms
 
 - **`.template-version`** at the repository root:
@@ -22,17 +24,17 @@ This file is owned by the platform and is the same in every template. A product 
   commit: <full sha of that tag's commit>
   ```
 
-- **The template repository** is `TrislabCompany/tl-<template>`, e.g. `tl-template-website`. Its releases are tags `<template>/vX.Y.Z`.
+- **The template repository** is `TrislabCompany/tl-template-website` for `template-website`, `TrislabCompany/tl-product-webapp` for `template-webapp` and `TrislabCompany/tl-product-saas` for `template-saas`. Its releases are tags `<template>/vX.Y.Z`.
 - **Base** is the release in `.template-version`; **target** is the release this update brings.
 
 ## Steps
 
-1. **Start clean.** The working tree is clean; fetch, and branch from an up-to-date `main`: `template-<template>-v<x.y.z>`.
+1. **Start clean.** The working tree is clean; fetch, and branch from an up-to-date `main`: `<template>-v<x.y.z>` (for example `template-webapp-v0.2.0`).
 2. **Read `.template-version`.** When it is missing, the repository is **untracked**: ask which template it came from (the `template` of its entry in `catalog/repos.yaml` of `tl-cloud-infrastructure`), and follow [An untracked repository](#an-untracked-repository).
 3. **Fetch the template's tags** into their own namespace, never into `refs/tags`:
 
    ```bash
-   git fetch --no-tags https://github.com/TrislabCompany/tl-<template>.git "refs/tags/<template>/*:refs/template/<template>/*"
+   git fetch --no-tags https://github.com/TrislabCompany/<template repository>.git "refs/tags/<template>/*:refs/template/<template>/*"
    ```
 
 4. **Choose the target:** the next minor version after the base (`v0.1.x` → the highest `v0.2.*`), never more than one minor per PR. Within the same minor, the highest patch. When there is none, stop: the repository is up to date.
@@ -44,7 +46,7 @@ This file is owned by the platform and is the same in every template. A product 
    | Ownership | Added or changed in the template | Deleted in the template |
    | --- | --- | --- |
    | `platform` | `git checkout refs/template/<template>/<target> -- <path>`: the template's file replaces this one | Delete it |
-   | `shared` | `git diff --binary <base tag> <target tag> -- <path> \| git apply --3way`; a new file is added. List every conflict, with the file and both sides | Delete it when it is unchanged from the base; otherwise keep it and list it |
+   | `shared` | Unchanged here: take the template's file. Changed here: 3-way merge this repository's file with the base and the target (`git merge-file`), conflicts marked in the file; a binary file changed on both sides stays as it is. A new file is added. List every conflict, with the file and both sides | Delete it when it is unchanged from the base; otherwise keep it and list it |
    | `product` | Leave it. Add the template's diff to the PR body under **Suggestions** | Leave it, and mention it |
    | `template-only` | Skip it | Skip it; delete it if a copy exists here |
 
@@ -66,7 +68,7 @@ A repository created before `.template-version` existed has no base. Its first u
 
 ## Rules
 
-- One template minor per PR, the canary repository first (for the website template, `trislab-website-corporate-site`).
+- One template minor per PR, the canary repository first (for the website template, the first `active` repository of `tl-template-website` in `catalog/products.yaml` of `tl-cloud-infrastructure`, today `trislab-website-corporate-site`).
 - Never `git merge` the template, and never fetch its tags into `refs/tags`.
 - Never touch `product` paths or project skills. Never merge or approve the PR.
 - When the target replaces this skill, finish the update with the version you started with, and say so in the PR.
