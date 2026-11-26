@@ -7,6 +7,7 @@ Every commit pushed to a PR, and every push to `main`, runs the required check `
 | `pnpm test` | GitHub and locally | The template manifest and exact dependency pins (`check:template`), types and content (`astro check`), lint, the unit tests of `scripts/`, `astro build`, then the page-weight budget and `security.txt` on `dist/` ([getting-started.md](getting-started.md)) |
 | Accessibility, `pnpm test:a11y` | GitHub and locally | pa11y-ci on every page |
 | Lighthouse CI | **GitHub only** | Lighthouse scores and Core Web Vitals |
+| Markdown lint | **GitHub only**, on a PR | markdownlint-cli2 on the Markdown files the PR adds or changes, except the content pages in `src/content/`, which `astro check` reads. The rules are tl-platform app-ci's, or the repository's own `.markdownlint-cli2.jsonc` |
 
 Both checks run once `dist/` is built, even if the other one fails, so one CI run reports everything. `scripts/quality.mjs` runs both of them. It copies `dist/` to `.quality/site`, sets the copy up as production with `scripts/write-config.mjs` (`/config.json`, no environment badge), and serves it with `wrangler pages dev` on port 8788. So `public/_headers` applies, the Content-Security-Policy among them, as on Cloudflare Pages.
 
@@ -16,14 +17,16 @@ The full run takes about 7 minutes, most of it pa11y and Lighthouse. So on a PR,
 
 | The PR changes | What runs |
 | --- | --- |
-| Only `docs/`, `*.md` in the root, `renovate.json`, the deploy and release workflows | Nothing |
+| Only `docs/`, `*.md` in the root, `renovate.json`, the deploy and release workflows | Nothing but the Markdown lint |
 | A content page, `src/content/<collection>/<language>/<page>.md` | `astro check`, the build, the checks on the built site, then pa11y and Lighthouse **only on the pages it shows on**: its own, the list of its collection, the home page and the sitemap page of that language |
 | Anything else in `src/` or `public/`, `astro.config.mjs`, `package.json`, `pnpm-lock.yaml`, `tsconfig.json` | Everything, on every page |
 | A script in `scripts/` | Lint and the unit tests, and the check the script implements (the built-site checks, pa11y, Lighthouse) |
 | `.pa11yci.json` or `lighthouserc.json` | The build and that check |
 | `ci.yml`, `checks.yml`, `.github/actions/`, or a file the script doesn't know | Everything |
 
-Every push to `main` runs everything on every page, whatever the PR ran. A merged PR that broke something the scope skipped shows up there before anything is released. If a file needs another rule, change `checksFor` in `scripts/ci-scope.mjs` and its test.
+Every push to `main` runs everything on every page, whatever the PR ran. A merged PR that broke something the scope skipped shows up there before anything is released. A failure on `main` opens the issue "main is failing: ci / ci" (label `ci-main`), and the next green run closes it. The next PR fixes it, so check the open `ci-main` issues before starting work.
+
+Every day, the workflow `audit` checks the npm packages in `pnpm-lock.yaml` against the known advisories, and fails on one of moderate severity or higher. A failure opens the issue "main is failing: audit". Fix it in its own PR, by raising the package, or accept the advisory in `.audit-accepted` with a line `# reason: <text>; expires: YYYY-MM-DD` above it. An entry past its date fails the audit again. If a file needs another rule, change `checksFor` in `scripts/ci-scope.mjs` and its test.
 
 Locally, `pnpm test` still runs everything. To check only some pages: `QUALITY_PAGES="/en/privacy /sl/privacy" pnpm test:a11y`.
 
